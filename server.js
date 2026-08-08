@@ -4,7 +4,6 @@ const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const http = require('http');
-const nodemailer = require('nodemailer');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -46,40 +45,40 @@ const menu = [
 const users = new Map();
 let userCounter = 100;
 
-/** @type {Map<string, any>} email(lowercase) -> pending registration awaiting email verification */
+/** @type {Map<string, any>} email(lowercase) -> pending registration awaiting phone verification */
 const pendingRegistrations = new Map();
 const CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 45 * 1000;
 
-const mailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
-  ? nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
-    })
-  : null;
+const SMS_CONFIGURED = Boolean(
+  process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_FROM_NUMBER
+);
 
 function generateCode() {
   return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 }
 
-async function sendVerificationEmail(toEmail, name, code) {
-  console.log(`[verify] كود التحقق لـ ${toEmail}: ${code}`);
-  if (!mailTransporter) {
-    console.warn('[verify] لا توجد بيانات SMTP (GMAIL_USER/GMAIL_APP_PASSWORD) - لم يُرسل بريد فعلي');
-    return;
+async function sendVerificationSms(toPhone, code) {
+  console.log(`[verify] كود التحقق لـ ${toPhone}: ${code}`);
+  if (!SMS_CONFIGURED) {
+    throw new Error('لا توجد بيانات خدمة SMS (TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN/TWILIO_FROM_NUMBER)');
   }
-  await mailTransporter.sendMail({
-    from: `"مطعم البيت الشامي" <${process.env.GMAIL_USER}>`,
-    to: toEmail,
-    subject: `رمز التحقق: ${code}`,
-    html: `
-      <div dir="rtl" style="font-family: Tahoma, sans-serif; text-align: right; padding: 16px;">
-        <h2>مرحباً ${name} 👋</h2>
-        <p>رمز التحقق الخاص بحسابك في مطعم البيت الشامي هو:</p>
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; background: #ffe8d9; color: #b6491c; padding: 14px 20px; border-radius: 12px; display: inline-block; margin: 10px 0;">${code}</div>
-        <p>صالح لمدة 10 دقائق. إذا لم تطلب هذا الرمز يمكنك تجاهل هذه الرسالة.</p>
-      </div>`,
+  const { TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER } = process.env;
+  const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64');
+  const body = new URLSearchParams({
+    To: toPhone,
+    From: TWILIO_FROM_NUMBER,
+    Body: `رمز التحقق الخاص بك في مطعم البيت الشامي: ${code}`,
   });
+  const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
+    method: 'POST',
+    headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`Twilio error ${resp.status}: ${errText}`);
+  }
 }
 
 /** @type {Map<string, any>} */
@@ -148,20 +147,21 @@ app.post('/api/auth/register', async (req, res) => {
     lastSentAt: Date.now(),
   });
 
-  let emailFailed = false;
+  let smsFailed = false;
   try {
-    await sendVerificationEmail(email, name, code);
+    await sendVerificationSms(phone, code);
   } catch (err) {
-    console.error('[verify] فشل إرسال البريد، سيتم عرض الرمز مباشرة كبديل:', err.message);
-    emailFailed = true;
+    console.error('[verify] فشل إرسال الرسالة النصية، سيتم عرض الرمز مباشرة كبديل:', err.message);
+    smsFailed = true;
   }
 
   res.json({
     ok: true,
     pendingVerification: true,
     email,
-    // بديل مؤقت عندما يتعذر إرسال البريد فعلياً (مثلاً بيانات SMTP غير صحيحة) حتى لا يتوقف الاختبار
-    ...(emailFailed ? { emailFailed: true, devCode: code } : {}),
+    phone,
+    // بديل مؤقت عندما يتعذر إرسال SMS فعلياً (مثلاً ما فيه حساب Twilio) حتى لا يتوقف الاختبار
+    ...(smsFailed ? { smsFailed: true, devCode: code } : {}),
   });
 });
 
@@ -170,7 +170,7 @@ app.post('/api/auth/verify', (req, res) => {
   const code = String(req.body.code || '').trim();
   const pending = pendingRegistrations.get(email);
 
-  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا البريد' });
+  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا الحساب' });
   if (Date.now() > pending.codeExpires) {
     pendingRegistrations.delete(email);
     return res.status(400).json({ ok: false, error: 'انتهت صلاحية الرمز، اطلب رمزاً جديداً' });
@@ -198,7 +198,7 @@ app.post('/api/auth/verify', (req, res) => {
 app.post('/api/auth/resend', async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const pending = pendingRegistrations.get(email);
-  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا البريد' });
+  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا الحساب' });
 
   const sinceLast = Date.now() - pending.lastSentAt;
   if (sinceLast < RESEND_COOLDOWN_MS) {
@@ -209,15 +209,15 @@ app.post('/api/auth/resend', async (req, res) => {
   pending.codeExpires = Date.now() + CODE_TTL_MS;
   pending.lastSentAt = Date.now();
 
-  let emailFailed = false;
+  let smsFailed = false;
   try {
-    await sendVerificationEmail(email, pending.name, pending.code);
+    await sendVerificationSms(pending.phone, pending.code);
   } catch (err) {
-    console.error('[verify] فشل إرسال البريد، سيتم عرض الرمز مباشرة كبديل:', err.message);
-    emailFailed = true;
+    console.error('[verify] فشل إرسال الرسالة النصية، سيتم عرض الرمز مباشرة كبديل:', err.message);
+    smsFailed = true;
   }
 
-  res.json({ ok: true, ...(emailFailed ? { emailFailed: true, devCode: pending.code } : {}) });
+  res.json({ ok: true, ...(smsFailed ? { smsFailed: true, devCode: pending.code } : {}) });
 });
 
 app.post('/api/auth/login', (req, res) => {

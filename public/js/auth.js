@@ -62,17 +62,17 @@
     el.error.style.display = 'block';
   }
 
-  function showVerifyStep(email, fallback) {
+  function showVerifyStep(email, phone, fallback) {
     state.pendingEmail = email;
-    el.verifyEmailLabel.textContent = email;
+    el.verifyEmailLabel.textContent = phone || email;
     document.querySelector('.auth-tabs').style.display = 'none';
     document.getElementById('roleSegment').style.display = 'none';
     el.form.style.display = 'none';
     el.verifyForm.style.display = 'block';
     el.verifyError.style.display = 'none';
-    if (fallback && fallback.emailFailed) {
+    if (fallback && fallback.smsFailed) {
       el.fCode.value = fallback.devCode;
-      showVerifyError('تعذر إرسال البريد فعلياً (إعدادات SMTP)، لذا يظهر الرمز مباشرة هنا كبديل مؤقت: ' + fallback.devCode);
+      showVerifyError('تعذر إرسال الرسالة النصية فعلياً (لا توجد بيانات SMS)، لذا يظهر الرمز مباشرة هنا كبديل مؤقت: ' + fallback.devCode);
     } else {
       el.fCode.value = '';
     }
@@ -118,7 +118,7 @@
       }
       el.submit.disabled = false;
       if (data.pendingVerification) {
-        showVerifyStep(data.email, data);
+        showVerifyStep(data.email, data.phone, data);
         return;
       }
       window.location.href = data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';
@@ -184,11 +184,11 @@
         tickResendBtn();
         return;
       }
-      if (data.emailFailed) {
+      if (data.smsFailed) {
         el.fCode.value = data.devCode;
-        showVerifyError('تعذر إرسال البريد فعلياً، الرمز الجديد: ' + data.devCode);
+        showVerifyError('تعذر إرسال الرسالة فعلياً، الرمز الجديد: ' + data.devCode);
       } else {
-        showToast('تم إرسال رمز جديد إلى بريدك');
+        showToast('تم إرسال رمز جديد إلى جوالك');
       }
       resendCooldownUntil = Date.now() + 45000;
       tickResendBtn();
