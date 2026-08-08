@@ -1,10 +1,8 @@
-const CACHE_NAME = 'shami-restaurant-v1';
+const CACHE_NAME = 'shami-restaurant-v2';
 const CORE_ASSETS = [
-  '/index.html',
-  '/menu.html',
-  '/kitchen.html',
   '/css/style.css',
   '/js/common.js',
+  '/js/auth.js',
   '/js/menu.js',
   '/js/kitchen.js',
   '/manifest.json',
@@ -31,6 +29,16 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.pathname.startsWith('/socket.io/') || url.pathname.startsWith('/api/')) return;
   if (event.request.method !== 'GET') return;
+
+  // صفحات HTML (index / menu / kitchen) محمية بجلسة تسجيل الدخول على السيرفر،
+  // فلازم تروح للشبكة أولاً حتى تنضبط إعادة التوجيه بين تسجيل الدخول والصفحات المحمية.
+  // الكاش يُستخدم فقط كخطة بديلة عند انقطاع الاتصال.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {

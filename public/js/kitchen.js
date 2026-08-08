@@ -13,9 +13,24 @@
     ready: document.getElementById('countReady'),
   };
 
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userNameBadge = document.getElementById('userNameBadge');
+
+  logoutBtn.addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/index.html';
+  });
+
+  async function loadMe() {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) { window.location.href = '/index.html'; return null; }
+    const data = await res.json();
+    userNameBadge.textContent = data.user.name;
+    return data.user;
+  }
+
   const socket = io();
   socket.on('connect', () => {
-    socket.emit('join', 'kitchen');
     socket.emit('orders:sync', {}, (all) => {
       all.forEach((order) => {
         orders.set(order.id, order);
@@ -113,5 +128,6 @@
     });
   }
 
+  loadMe();
   renderBoard();
 })();

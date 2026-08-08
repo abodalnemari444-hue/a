@@ -1,12 +1,10 @@
 (function () {
-  const STORAGE_KEY = 'shami_my_orders';
-  const STATUS_ORDER = ['pending', 'accepted', 'preparing', 'ready', 'completed'];
+  const STATUS_ORDER = ['pending', 'preparing', 'ready', 'completed'];
 
   const state = {
     menu: [],
     category: null,
     cart: {}, // id -> qty
-    myOrderIds: JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'),
     myOrders: new Map(), // id -> order
   };
 
@@ -25,34 +23,39 @@
     cartIconBtn: document.getElementById('cartIconBtn'),
     myOrdersTitle: document.getElementById('myOrdersTitle'),
     myOrders: document.getElementById('myOrders'),
-    customerName: document.getElementById('customerName'),
     tableNumber: document.getElementById('tableNumber'),
     orderNotes: document.getElementById('orderNotes'),
+    userNameBadge: document.getElementById('userNameBadge'),
+    logoutBtn: document.getElementById('logoutBtn'),
   };
 
-  const savedName = localStorage.getItem('shami_customer_name');
-  if (savedName) el.customerName.value = savedName;
+  el.logoutBtn.addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/index.html';
+  });
+
+  async function loadMe() {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) { window.location.href = '/index.html'; return null; }
+    const data = await res.json();
+    el.userNameBadge.textContent = data.user.name;
+    return data.user;
+  }
+
   const savedTable = localStorage.getItem('shami_table_number');
   if (savedTable) el.tableNumber.value = savedTable;
 
   const socket = io();
-  socket.on('connect', () => socket.emit('join', 'customer'));
   bindConnectionIndicator(socket);
 
   socket.on('order:updated', (order) => {
-    if (state.myOrderIds.includes(order.id)) {
-      const isNewStatus = state.myOrders.get(order.id)?.status !== order.status;
-      state.myOrders.set(order.id, order);
-      renderMyOrders();
-      if (isNewStatus && order.status !== 'pending') {
-        showToast(`طلبك ${order.id}: ${order.statusLabel}`);
-      }
+    const isNewStatus = state.myOrders.get(order.id)?.status !== order.status;
+    state.myOrders.set(order.id, order);
+    renderMyOrders();
+    if (isNewStatus && order.status !== 'pending') {
+      showToast(`طلبك ${order.id}: ${order.statusLabel}`);
     }
   });
-
-  function persistOrderIds() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.myOrderIds));
-  }
 
   async function loadMenu() {
     const res = await fetch('/api/menu');
@@ -184,11 +187,9 @@
   el.submitOrderBtn.addEventListener('click', () => {
     const entries = cartEntries();
     if (entries.length === 0) { showToast('السلة فارغة'); return; }
-    const customerName = el.customerName.value.trim() || 'زبون';
     const tableNumber = el.tableNumber.value.trim();
     const notes = el.orderNotes.value.trim();
 
-    localStorage.setItem('shami_customer_name', customerName);
     localStorage.setItem('shami_table_number', tableNumber);
 
     el.submitOrderBtn.disabled = true;
@@ -196,7 +197,6 @@
 
     socket.emit('order:create', {
       items: entries.map((it) => ({ id: it.id, qty: it.qty })),
-      customerName,
       tableNumber,
       notes,
     }, (res) => {
@@ -205,9 +205,7 @@
       if (!res.ok) { showToast('تعذر إرسال الطلب: ' + res.error); return; }
 
       state.cart = {};
-      state.myOrderIds.unshift(res.order.id);
       state.myOrders.set(res.order.id, res.order);
-      persistOrderIds();
       renderGrid();
       updateCartBar();
       renderMyOrders();
@@ -223,10 +221,7 @@
   }
 
   function renderMyOrders() {
-    const list = state.myOrderIds
-      .map((id) => state.myOrders.get(id))
-      .filter(Boolean)
-      .sort((a, b) => b.createdAt - a.createdAt);
+    const list = [...state.myOrders.values()].sort((a, b) => b.createdAt - a.createdAt);
 
     el.myOrdersTitle.style.display = list.length ? 'block' : 'none';
     el.myOrders.innerHTML = list.map((order) => {
@@ -247,16 +242,17 @@
     }).join('');
   }
 
-  async function loadMyOrdersFromServer() {
-    if (state.myOrderIds.length === 0) return;
+  function loadMyOrdersFromServer() {
     socket.emit('orders:sync', {}, (all) => {
-      all.forEach((order) => {
-        if (state.myOrderIds.includes(order.id)) state.myOrders.set(order.id, order);
-      });
+      all.forEach((order) => state.myOrders.set(order.id, order));
       renderMyOrders();
     });
   }
 
-  loadMenu();
-  socket.on('connect', loadMyOrdersFromServer);
+  (async function init() {
+    const user = await loadMe();
+    if (!user) return;
+    await loadMenu();
+    socket.on('connect', loadMyOrdersFromServer);
+  })();
 })();

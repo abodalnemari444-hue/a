@@ -16,11 +16,11 @@
     <div class="brand">
       <span class="logo-emoji">🍽️</span>
       <span>البيت الشامي</span>
-      <span class="role-badge">عميل (تجريبي)</span>
+      <span class="role-badge" id="userNameBadge">عميل</span>
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
       <span class="conn-dot" title="حالة الاتصال"></span>
-      <a href="/index.html" class="icon-btn" title="تبديل الحساب">🔁</a>
+      <button class="icon-btn" id="logoutBtn" title="تسجيل خروج">🚪</button>
       <button class="icon-btn" id="cartIconBtn">
         🛒
         <span class="badge-count" id="cartCount" style="display:none;">0</span>
@@ -52,10 +52,6 @@
       <div id="cartItemsList"></div>
 
       <div class="field" style="margin-top:14px;">
-        <label>اسمك</label>
-        <input type="text" id="customerName" placeholder="مثال: أحمد" maxlength="40" />
-      </div>
-      <div class="field">
         <label>رقم الطاولة (اختياري)</label>
         <input type="text" id="tableNumber" placeholder="مثال: 5" maxlength="10" />
       </div>

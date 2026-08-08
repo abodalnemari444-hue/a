@@ -1,5 +1,7 @@
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
+const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -9,8 +11,15 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
+const sessionMiddleware = session({
+  secret: crypto.randomBytes(32).toString('hex'),
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 },
+});
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(sessionMiddleware);
 
 // ---------------------------------------------------------------------------
 // بيانات تجريبية في الذاكرة (بدون قاعدة بيانات - تُفقد عند إعادة تشغيل السيرفر)
@@ -31,14 +40,17 @@ const menu = [
   { id: 'm12', category: 'حلويات', name: 'أم علي', desc: 'حلا ساخن بالمكسرات والقشطة', price: 20, emoji: '🍰', available: true },
 ];
 
+/** @type {Map<string, any>} email(lowercase) -> user */
+const users = new Map();
+let userCounter = 100;
+
 /** @type {Map<string, any>} */
 const orders = new Map();
 let orderCounter = 1000;
 
-const STATUS_FLOW = ['pending', 'accepted', 'preparing', 'ready', 'completed'];
+const STATUS_FLOW = ['pending', 'preparing', 'ready', 'completed'];
 const STATUS_LABELS = {
   pending: 'بانتظار موافقة المطبخ',
-  accepted: 'تم القبول',
   preparing: 'قيد التحضير',
   ready: 'جاهز للاستلام',
   completed: 'تم التسليم',
@@ -49,9 +61,107 @@ function serializeOrder(order) {
   return { ...order, statusLabel: STATUS_LABELS[order.status] || order.status };
 }
 
-function broadcastOrder(order) {
-  io.emit('order:updated', serializeOrder(order));
+function publicUser(user) {
+  return { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role };
 }
+
+function hashPassword(password, salt) {
+  return crypto.scryptSync(password, salt, 64).toString('hex');
+}
+
+function verifyPassword(password, salt, expectedHash) {
+  const actual = Buffer.from(hashPassword(password, salt), 'hex');
+  const expected = Buffer.from(expectedHash, 'hex');
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+}
+
+// ---------------------------------------------------------------------------
+// Auth API
+// ---------------------------------------------------------------------------
+
+function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim()); }
+function isValidPhone(v) { return /^\+?\d{7,15}$/.test(String(v || '').trim()); }
+
+app.post('/api/auth/register', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  const phone = String(req.body.phone || '').trim();
+  const name = String(req.body.name || '').trim().slice(0, 40);
+  const role = req.body.role;
+
+  if (!name) return res.status(400).json({ ok: false, error: 'الاسم مطلوب' });
+  if (!isValidEmail(email)) return res.status(400).json({ ok: false, error: 'بريد إلكتروني غير صالح' });
+  if (password.length < 6) return res.status(400).json({ ok: false, error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+  if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'رقم جوال غير صالح' });
+  if (!['customer', 'kitchen'].includes(role)) return res.status(400).json({ ok: false, error: 'نوع حساب غير صالح' });
+  if (users.has(email)) return res.status(400).json({ ok: false, error: 'هذا البريد مستخدم مسبقاً' });
+
+  const salt = crypto.randomBytes(16).toString('hex');
+  userCounter += 1;
+  const user = {
+    id: 'u' + userCounter,
+    name,
+    email,
+    phone,
+    role,
+    salt,
+    passwordHash: hashPassword(password, salt),
+    createdAt: Date.now(),
+  };
+  users.set(email, user);
+  req.session.user = publicUser(user);
+  res.json({ ok: true, user: publicUser(user) });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  const user = users.get(email);
+  if (!user || !verifyPassword(password, user.salt, user.passwordHash)) {
+    return res.status(401).json({ ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+  }
+  req.session.user = publicUser(user);
+  res.json({ ok: true, user: publicUser(user) });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
+
+app.get('/api/auth/me', (req, res) => {
+  if (!req.session.user) return res.status(401).json({ ok: false });
+  res.json({ ok: true, user: req.session.user });
+});
+
+// ---------------------------------------------------------------------------
+// حماية الصفحات: لازم تسجيل دخول، وكل دور يروح لصفحته فقط
+// ---------------------------------------------------------------------------
+
+function requireAuth(role) {
+  return (req, res, next) => {
+    const u = req.session.user;
+    if (!u) return res.redirect('/index.html');
+    if (role && u.role !== role) return res.redirect(u.role === 'kitchen' ? '/kitchen.html' : '/menu.html');
+    next();
+  };
+}
+
+app.get(['/', '/index.html'], (req, res) => {
+  if (req.session.user) {
+    return res.redirect(req.session.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/menu.html', requireAuth('customer'), (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'menu.html'));
+});
+
+app.get('/kitchen.html', requireAuth('kitchen'), (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'kitchen.html'));
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ---------------------------------------------------------------------------
 // REST API
@@ -61,23 +171,29 @@ app.get('/api/menu', (req, res) => {
   res.json(menu);
 });
 
-app.get('/api/orders', (req, res) => {
-  res.json([...orders.values()].map(serializeOrder).sort((a, b) => b.createdAt - a.createdAt));
+// ---------------------------------------------------------------------------
+// Socket.io - التزامن اللحظي بين العميل والمطبخ (مرتبط بجلسة تسجيل الدخول)
+// ---------------------------------------------------------------------------
+
+io.use((socket, next) => sessionMiddleware(socket.request, {}, next));
+io.use((socket, next) => {
+  if (socket.request.session && socket.request.session.user) return next();
+  next(new Error('unauthorized'));
 });
 
-// ---------------------------------------------------------------------------
-// Socket.io - التزامن اللحظي بين العميل والمطبخ
-// ---------------------------------------------------------------------------
+function broadcastOrder(order) {
+  io.to('kitchen').emit('order:updated', order);
+  io.to('user:' + order.customerId).emit('order:updated', order);
+}
 
 io.on('connection', (socket) => {
-  socket.on('join', (role) => {
-    if (role === 'kitchen' || role === 'customer') {
-      socket.join(role);
-    }
-  });
+  const me = socket.request.session.user;
+  socket.join(me.role);
+  socket.join('user:' + me.id);
 
   socket.on('order:create', (payload, ack) => {
     try {
+      if (me.role !== 'customer') throw new Error('غير مخوّل');
       const items = Array.isArray(payload?.items) ? payload.items : [];
       if (items.length === 0) throw new Error('السلة فارغة');
 
@@ -92,7 +208,9 @@ io.on('connection', (socket) => {
       orderCounter += 1;
       const order = {
         id: 'ORD-' + orderCounter,
-        customerName: (payload?.customerName || 'زبون').toString().slice(0, 40),
+        customerId: me.id,
+        customerName: me.name,
+        customerPhone: me.phone,
         tableNumber: (payload?.tableNumber || '').toString().slice(0, 10),
         notes: (payload?.notes || '').toString().slice(0, 200),
         items: enrichedItems,
@@ -103,7 +221,7 @@ io.on('connection', (socket) => {
       };
 
       orders.set(order.id, order);
-      broadcastOrder(order);
+      broadcastOrder(serializeOrder(order));
       if (typeof ack === 'function') ack({ ok: true, order: serializeOrder(order) });
     } catch (err) {
       if (typeof ack === 'function') ack({ ok: false, error: err.message });
@@ -112,6 +230,7 @@ io.on('connection', (socket) => {
 
   socket.on('order:status', (payload, ack) => {
     try {
+      if (me.role !== 'kitchen') throw new Error('غير مخوّل');
       const order = orders.get(payload?.id);
       if (!order) throw new Error('الطلب غير موجود');
       const status = payload.status;
@@ -119,7 +238,7 @@ io.on('connection', (socket) => {
 
       order.status = status;
       order.updatedAt = Date.now();
-      broadcastOrder(order);
+      broadcastOrder(serializeOrder(order));
       if (typeof ack === 'function') ack({ ok: true });
     } catch (err) {
       if (typeof ack === 'function') ack({ ok: false, error: err.message });
@@ -127,9 +246,10 @@ io.on('connection', (socket) => {
   });
 
   socket.on('orders:sync', (_payload, ack) => {
-    if (typeof ack === 'function') {
-      ack([...orders.values()].map(serializeOrder).sort((a, b) => b.createdAt - a.createdAt));
-    }
+    if (typeof ack !== 'function') return;
+    let list = [...orders.values()];
+    if (me.role === 'customer') list = list.filter((o) => o.customerId === me.id);
+    ack(list.map(serializeOrder).sort((a, b) => b.createdAt - a.createdAt));
   });
 });
 

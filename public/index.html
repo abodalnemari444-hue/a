@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>مطعم البيت الشامي</title>
-  <meta name="description" content="اطلب طعامك المفضل بضغطة زر" />
+  <title>تسجيل الدخول - مطعم البيت الشامي</title>
+  <meta name="description" content="سجّل دخولك لطلب طعامك المفضل أو لإدارة طلبات المطبخ" />
   <meta name="theme-color" content="#d9622b" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -19,34 +19,45 @@
     <h1>مطعم البيت الشامي</h1>
     <p class="tagline">نكهة بيتنا... وصلتك أينما كنت</p>
 
-    <div class="role-cards">
-      <a class="role-card customer" href="/menu.html">
-        <div class="r-icon">🧑‍🍳</div>
-        <div class="r-text">
-          <h3>دخول تجريبي كـ عميل</h3>
-          <p>تصفح المنيو واطلب أطباقك مباشرة</p>
-        </div>
-        <div class="r-go">‹</div>
-      </a>
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-mode="login">تسجيل الدخول</button>
+        <button class="auth-tab" data-mode="register">إنشاء حساب جديد</button>
+      </div>
 
-      <a class="role-card kitchen" href="/kitchen.html">
-        <div class="r-icon">👨‍🍳</div>
-        <div class="r-text">
-          <h3>دخول تجريبي كـ المطبخ</h3>
-          <p>استقبل الطلبات ووافق عليها لحظياً</p>
+      <div class="segmented" id="roleSegment">
+        <button class="seg-btn active" data-role="customer">🧑‍🍳 عميل</button>
+        <button class="seg-btn" data-role="kitchen">👨‍🍳 طاقم المطبخ</button>
+      </div>
+
+      <form id="authForm">
+        <div class="field" id="nameField" style="display:none;">
+          <label>الاسم</label>
+          <input type="text" id="fName" placeholder="مثال: أحمد" maxlength="40" autocomplete="name" />
         </div>
-        <div class="r-go">‹</div>
-      </a>
+        <div class="field">
+          <label>البريد الإلكتروني</label>
+          <input type="email" id="fEmail" placeholder="example@mail.com" autocomplete="email" required />
+        </div>
+        <div class="field" id="phoneField" style="display:none;">
+          <label>رقم الجوال</label>
+          <input type="tel" id="fPhone" placeholder="05xxxxxxxx" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <input type="password" id="fPassword" placeholder="••••••" minlength="6" autocomplete="current-password" required />
+        </div>
+
+        <div class="error-box" id="authError" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="authSubmit">دخول</button>
+      </form>
     </div>
 
     <button class="install-hint">📲 ثبّت التطبيق على جوالك</button>
-
-    <p class="demo-note">
-      هذا وضع تجريبي: الدخول أعلاه لا يتطلب كلمة مرور، وهو مخصص لتجربة تزامن الطلبات بين
-      صفحة العميل وصفحة المطبخ لحظياً على نفس الشبكة أو الجهاز.
-    </p>
   </div>
 
   <script src="/js/common.js"></script>
+  <script src="/js/auth.js"></script>
 </body>
 </html>
