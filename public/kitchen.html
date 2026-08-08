@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>لوحة المطبخ - مطعم البيت الشامي</title>
+  <meta name="theme-color" content="#2f6b4f" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="مطبخ البيت الشامي" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo-emoji">👨‍🍳</span>
+      <span>لوحة المطبخ</span>
+      <span class="role-badge">مطبخ (تجريبي)</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="conn-dot" title="حالة الاتصال"></span>
+      <a href="/index.html" class="icon-btn" title="تبديل الحساب">🔁</a>
+    </div>
+  </header>
+
+  <main class="screen-pad">
+    <div class="kanban">
+      <div class="kanban-col">
+        <h2>🆕 طلبات جديدة <span class="count" id="countPending">0</span></h2>
+        <div class="col-list" id="colPending"></div>
+      </div>
+      <div class="kanban-col">
+        <h2>🔥 قيد التحضير <span class="count" id="countPreparing">0</span></h2>
+        <div class="col-list" id="colPreparing"></div>
+      </div>
+      <div class="kanban-col">
+        <h2>✅ جاهزة للتسليم <span class="count" id="countReady">0</span></h2>
+        <div class="col-list" id="colReady"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/kitchen.js"></script>
+</body>
+</html>
