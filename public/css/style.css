@@ -561,26 +561,38 @@ img, svg { max-width: 100%; display: block; }
   color: var(--color-primary-dark);
 }
 
-.password-wrap { position: relative; }
-.password-wrap input { padding-left: 42px; }
+.password-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-bg);
+}
+.password-wrap:focus-within { border-color: var(--color-primary); }
+.password-wrap input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 11px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--color-text);
+}
+.password-wrap input:focus { outline: none; }
 .toggle-password {
-  position: absolute;
-  left: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  flex: 0 0 auto;
+  width: 42px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 16px;
-  border-radius: 8px;
+  font-size: 17px;
   color: var(--color-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.toggle-password:active { background: var(--color-bg); }
+.toggle-password:active { color: var(--color-primary-dark); }
 
 .error-box {
   background: #fbe4e4;
