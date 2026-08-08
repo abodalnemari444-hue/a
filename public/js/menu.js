@@ -188,6 +188,11 @@
     const entries = cartEntries();
     if (entries.length === 0) { showToast('السلة فارغة'); return; }
     const tableNumber = el.tableNumber.value.trim();
+    if (!tableNumber) {
+      showToast('رقم الطاولة مطلوب');
+      el.tableNumber.focus();
+      return;
+    }
     const notes = el.orderNotes.value.trim();
 
     localStorage.setItem('shami_table_number', tableNumber);

@@ -303,6 +303,8 @@ io.on('connection', (socket) => {
       if (me.role !== 'customer') throw new Error('غير مخوّل');
       const items = Array.isArray(payload?.items) ? payload.items : [];
       if (items.length === 0) throw new Error('السلة فارغة');
+      const tableNumber = (payload?.tableNumber || '').toString().trim().slice(0, 10);
+      if (!tableNumber) throw new Error('رقم الطاولة مطلوب');
 
       const enrichedItems = items.map((it) => {
         const menuItem = menu.find((m) => m.id === it.id);
@@ -318,7 +320,7 @@ io.on('connection', (socket) => {
         customerId: me.id,
         customerName: me.name,
         customerPhone: me.phone,
-        tableNumber: (payload?.tableNumber || '').toString().slice(0, 10),
+        tableNumber,
         notes: (payload?.notes || '').toString().slice(0, 200),
         items: enrichedItems,
         total,
