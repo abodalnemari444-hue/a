@@ -14,7 +14,15 @@
     form: document.getElementById('authForm'),
     submit: document.getElementById('authSubmit'),
     error: document.getElementById('authError'),
+    togglePassword: document.getElementById('togglePassword'),
   };
+
+  el.togglePassword.addEventListener('click', () => {
+    const hidden = el.fPassword.type === 'password';
+    el.fPassword.type = hidden ? 'text' : 'password';
+    el.togglePassword.textContent = hidden ? '🙈' : '👁️';
+    el.togglePassword.setAttribute('aria-label', hidden ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+  });
 
   function applyMode() {
     const isRegister = state.mode === 'register';

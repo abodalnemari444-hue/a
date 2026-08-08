@@ -45,7 +45,10 @@
         </div>
         <div class="field">
           <label>كلمة المرور</label>
-          <input type="password" id="fPassword" placeholder="••••••" minlength="6" autocomplete="current-password" required />
+          <div class="password-wrap">
+            <input type="password" id="fPassword" placeholder="••••••" minlength="6" autocomplete="current-password" required />
+            <button type="button" class="toggle-password" id="togglePassword" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
         </div>
 
         <div class="error-box" id="authError" style="display:none;"></div>

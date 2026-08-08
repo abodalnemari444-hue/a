@@ -561,6 +561,27 @@ img, svg { max-width: 100%; display: block; }
   color: var(--color-primary-dark);
 }
 
+.password-wrap { position: relative; }
+.password-wrap input { padding-left: 42px; }
+.toggle-password {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toggle-password:active { background: var(--color-bg); }
+
 .error-box {
   background: #fbe4e4;
   color: var(--color-danger);
