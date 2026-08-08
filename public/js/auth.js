@@ -1,5 +1,5 @@
 (function () {
-  const state = { mode: 'login', role: 'customer' };
+  const state = { mode: 'login', role: 'customer', pendingEmail: null };
 
   const el = {
     tabs: document.querySelectorAll('.auth-tab'),
@@ -15,6 +15,14 @@
     submit: document.getElementById('authSubmit'),
     error: document.getElementById('authError'),
     togglePassword: document.getElementById('togglePassword'),
+
+    verifyForm: document.getElementById('verifyForm'),
+    verifyEmailLabel: document.getElementById('verifyEmailLabel'),
+    fCode: document.getElementById('fCode'),
+    verifyError: document.getElementById('verifyError'),
+    verifySubmit: document.getElementById('verifySubmit'),
+    resendCodeBtn: document.getElementById('resendCodeBtn'),
+    backToFormBtn: document.getElementById('backToFormBtn'),
   };
 
   el.togglePassword.addEventListener('click', () => {
@@ -54,6 +62,32 @@
     el.error.style.display = 'block';
   }
 
+  function showVerifyStep(email, fallback) {
+    state.pendingEmail = email;
+    el.verifyEmailLabel.textContent = email;
+    document.querySelector('.auth-tabs').style.display = 'none';
+    document.getElementById('roleSegment').style.display = 'none';
+    el.form.style.display = 'none';
+    el.verifyForm.style.display = 'block';
+    el.verifyError.style.display = 'none';
+    if (fallback && fallback.emailFailed) {
+      el.fCode.value = fallback.devCode;
+      showVerifyError('تعذر إرسال البريد فعلياً (إعدادات SMTP)، لذا يظهر الرمز مباشرة هنا كبديل مؤقت: ' + fallback.devCode);
+    } else {
+      el.fCode.value = '';
+    }
+    el.fCode.focus();
+  }
+
+  function backToForm() {
+    state.pendingEmail = null;
+    document.querySelector('.auth-tabs').style.display = 'flex';
+    document.getElementById('roleSegment').style.display = 'flex';
+    el.verifyForm.style.display = 'none';
+    el.form.style.display = 'block';
+  }
+  el.backToFormBtn.addEventListener('click', backToForm);
+
   el.form.addEventListener('submit', async (e) => {
     e.preventDefault();
     el.error.style.display = 'none';
@@ -82,10 +116,85 @@
         el.submit.disabled = false;
         return;
       }
+      el.submit.disabled = false;
+      if (data.pendingVerification) {
+        showVerifyStep(data.email, data);
+        return;
+      }
       window.location.href = data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';
     } catch (err) {
       showError('تعذر الاتصال بالسيرفر');
       el.submit.disabled = false;
+    }
+  });
+
+  function showVerifyError(msg) {
+    el.verifyError.textContent = msg;
+    el.verifyError.style.display = 'block';
+  }
+
+  el.verifyForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    el.verifyError.style.display = 'none';
+    el.verifySubmit.disabled = true;
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: state.pendingEmail, code: el.fCode.value.trim() }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showVerifyError(data.error || 'رمز غير صحيح');
+        el.verifySubmit.disabled = false;
+        return;
+      }
+      window.location.href = data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';
+    } catch (err) {
+      showVerifyError('تعذر الاتصال بالسيرفر');
+      el.verifySubmit.disabled = false;
+    }
+  });
+
+  let resendCooldownUntil = 0;
+  function tickResendBtn() {
+    const remaining = Math.ceil((resendCooldownUntil - Date.now()) / 1000);
+    if (remaining > 0) {
+      el.resendCodeBtn.disabled = true;
+      el.resendCodeBtn.textContent = `إعادة الإرسال بعد ${remaining} ثانية`;
+      setTimeout(tickResendBtn, 1000);
+    } else {
+      el.resendCodeBtn.disabled = false;
+      el.resendCodeBtn.textContent = 'إعادة إرسال الرمز';
+    }
+  }
+
+  el.resendCodeBtn.addEventListener('click', async () => {
+    el.resendCodeBtn.disabled = true;
+    try {
+      const res = await fetch('/api/auth/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: state.pendingEmail }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showVerifyError(data.error || 'تعذر إعادة الإرسال');
+        resendCooldownUntil = Date.now() + (data.retryAfterMs || 0);
+        tickResendBtn();
+        return;
+      }
+      if (data.emailFailed) {
+        el.fCode.value = data.devCode;
+        showVerifyError('تعذر إرسال البريد فعلياً، الرمز الجديد: ' + data.devCode);
+      } else {
+        showToast('تم إرسال رمز جديد إلى بريدك');
+      }
+      resendCooldownUntil = Date.now() + 45000;
+      tickResendBtn();
+    } catch (err) {
+      showVerifyError('تعذر الاتصال بالسيرفر');
+      el.resendCodeBtn.disabled = false;
     }
   });
 

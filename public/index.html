@@ -55,6 +55,20 @@
 
         <button type="submit" class="btn btn-primary btn-block" id="authSubmit">دخول</button>
       </form>
+
+      <form id="verifyForm" style="display:none;">
+        <p class="verify-hint">أرسلنا رمز تحقق مكوّن من 6 أرقام إلى <strong id="verifyEmailLabel"></strong>، أدخله هنا لتفعيل حسابك.</p>
+        <div class="field">
+          <label>رمز التحقق</label>
+          <input type="text" id="fCode" class="code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code" required />
+        </div>
+
+        <div class="error-box" id="verifyError" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="verifySubmit">تحقق وتفعيل الحساب</button>
+        <button type="button" class="btn btn-outline btn-block" style="margin-top:8px;" id="resendCodeBtn">إعادة إرسال الرمز</button>
+        <button type="button" class="btn btn-outline btn-block" style="margin-top:8px;" id="backToFormBtn">رجوع</button>
+      </form>
     </div>
 
     <button class="install-hint">📲 ثبّت التطبيق على جوالك</button>

@@ -594,6 +594,21 @@ img, svg { max-width: 100%; display: block; }
 }
 .toggle-password:active { color: var(--color-primary-dark); }
 
+.verify-hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  line-height: 1.8;
+  margin: 0 0 14px;
+}
+.verify-hint strong { color: var(--color-text); }
+
+.code-input {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 10px;
+}
+
 .error-box {
   background: #fbe4e4;
   color: var(--color-danger);

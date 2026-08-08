@@ -2,3 +2,5 @@ node_modules/
 npm-debug.log*
 .env
 .claude/
+server_out.log
+server_err.log

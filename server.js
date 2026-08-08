@@ -1,8 +1,10 @@
+require('dotenv').config();
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const http = require('http');
+const nodemailer = require('nodemailer');
 const { Server } = require('socket.io');
 
 const app = express();
@@ -44,6 +46,42 @@ const menu = [
 const users = new Map();
 let userCounter = 100;
 
+/** @type {Map<string, any>} email(lowercase) -> pending registration awaiting email verification */
+const pendingRegistrations = new Map();
+const CODE_TTL_MS = 10 * 60 * 1000;
+const RESEND_COOLDOWN_MS = 45 * 1000;
+
+const mailTransporter = process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD },
+    })
+  : null;
+
+function generateCode() {
+  return String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+}
+
+async function sendVerificationEmail(toEmail, name, code) {
+  console.log(`[verify] كود التحقق لـ ${toEmail}: ${code}`);
+  if (!mailTransporter) {
+    console.warn('[verify] لا توجد بيانات SMTP (GMAIL_USER/GMAIL_APP_PASSWORD) - لم يُرسل بريد فعلي');
+    return;
+  }
+  await mailTransporter.sendMail({
+    from: `"مطعم البيت الشامي" <${process.env.GMAIL_USER}>`,
+    to: toEmail,
+    subject: `رمز التحقق: ${code}`,
+    html: `
+      <div dir="rtl" style="font-family: Tahoma, sans-serif; text-align: right; padding: 16px;">
+        <h2>مرحباً ${name} 👋</h2>
+        <p>رمز التحقق الخاص بحسابك في مطعم البيت الشامي هو:</p>
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; background: #ffe8d9; color: #b6491c; padding: 14px 20px; border-radius: 12px; display: inline-block; margin: 10px 0;">${code}</div>
+        <p>صالح لمدة 10 دقائق. إذا لم تطلب هذا الرمز يمكنك تجاهل هذه الرسالة.</p>
+      </div>`,
+  });
+}
+
 /** @type {Map<string, any>} */
 const orders = new Map();
 let orderCounter = 1000;
@@ -82,7 +120,7 @@ function verifyPassword(password, salt, expectedHash) {
 function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim()); }
 function isValidPhone(v) { return /^\+?\d{7,15}$/.test(String(v || '').trim()); }
 
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   const phone = String(req.body.phone || '').trim();
@@ -97,20 +135,89 @@ app.post('/api/auth/register', (req, res) => {
   if (users.has(email)) return res.status(400).json({ ok: false, error: 'هذا البريد مستخدم مسبقاً' });
 
   const salt = crypto.randomBytes(16).toString('hex');
-  userCounter += 1;
-  const user = {
-    id: 'u' + userCounter,
+  const code = generateCode();
+  pendingRegistrations.set(email, {
     name,
     email,
     phone,
     role,
     salt,
     passwordHash: hashPassword(password, salt),
+    code,
+    codeExpires: Date.now() + CODE_TTL_MS,
+    lastSentAt: Date.now(),
+  });
+
+  let emailFailed = false;
+  try {
+    await sendVerificationEmail(email, name, code);
+  } catch (err) {
+    console.error('[verify] فشل إرسال البريد، سيتم عرض الرمز مباشرة كبديل:', err.message);
+    emailFailed = true;
+  }
+
+  res.json({
+    ok: true,
+    pendingVerification: true,
+    email,
+    // بديل مؤقت عندما يتعذر إرسال البريد فعلياً (مثلاً بيانات SMTP غير صحيحة) حتى لا يتوقف الاختبار
+    ...(emailFailed ? { emailFailed: true, devCode: code } : {}),
+  });
+});
+
+app.post('/api/auth/verify', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const code = String(req.body.code || '').trim();
+  const pending = pendingRegistrations.get(email);
+
+  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا البريد' });
+  if (Date.now() > pending.codeExpires) {
+    pendingRegistrations.delete(email);
+    return res.status(400).json({ ok: false, error: 'انتهت صلاحية الرمز، اطلب رمزاً جديداً' });
+  }
+  if (code !== pending.code) return res.status(400).json({ ok: false, error: 'رمز التحقق غير صحيح' });
+
+  userCounter += 1;
+  const user = {
+    id: 'u' + userCounter,
+    name: pending.name,
+    email: pending.email,
+    phone: pending.phone,
+    role: pending.role,
+    salt: pending.salt,
+    passwordHash: pending.passwordHash,
     createdAt: Date.now(),
   };
   users.set(email, user);
+  pendingRegistrations.delete(email);
+
   req.session.user = publicUser(user);
   res.json({ ok: true, user: publicUser(user) });
+});
+
+app.post('/api/auth/resend', async (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const pending = pendingRegistrations.get(email);
+  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا البريد' });
+
+  const sinceLast = Date.now() - pending.lastSentAt;
+  if (sinceLast < RESEND_COOLDOWN_MS) {
+    return res.status(429).json({ ok: false, error: 'انتظر قليلاً قبل طلب رمز جديد', retryAfterMs: RESEND_COOLDOWN_MS - sinceLast });
+  }
+
+  pending.code = generateCode();
+  pending.codeExpires = Date.now() + CODE_TTL_MS;
+  pending.lastSentAt = Date.now();
+
+  let emailFailed = false;
+  try {
+    await sendVerificationEmail(email, pending.name, pending.code);
+  } catch (err) {
+    console.error('[verify] فشل إرسال البريد، سيتم عرض الرمز مباشرة كبديل:', err.message);
+    emailFailed = true;
+  }
+
+  res.json({ ok: true, ...(emailFailed ? { emailFailed: true, devCode: pending.code } : {}) });
 });
 
 app.post('/api/auth/login', (req, res) => {
