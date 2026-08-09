@@ -165,7 +165,7 @@
       setTimeout(tickResendBtn, 1000);
     } else {
       el.resendCodeBtn.disabled = false;
-      el.resendCodeBtn.textContent = 'إعادة إرسال الرمز';
+      el.resendCodeBtn.textContent = 'لم يصلني الرمز؟ إعادة الإرسال';
     }
   }
 

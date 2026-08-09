@@ -594,6 +594,20 @@ img, svg { max-width: 100%; display: block; }
 }
 .toggle-password:active { color: var(--color-primary-dark); }
 
+.link-btn {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--color-primary-dark);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 12px 6px;
+  cursor: pointer;
+}
+.link-btn:disabled { color: var(--color-text-muted); cursor: not-allowed; }
+
 .verify-hint {
   font-size: 13px;
   color: var(--color-text-muted);
