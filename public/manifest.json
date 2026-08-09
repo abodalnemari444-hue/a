@@ -1,6 +1,6 @@
 {
-  "name": "مطعم البيت الشامي",
-  "short_name": "البيت الشامي",
+  "name": "مطعم النمري",
+  "short_name": "النمري",
   "description": "اطلب طعامك المفضل بضغطة زر",
   "start_url": "/index.html",
   "scope": "/",

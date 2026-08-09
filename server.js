@@ -123,7 +123,7 @@ async function sendVerificationSms(toPhone, code) {
   const body = new URLSearchParams({
     To: toPhone,
     From: TWILIO_FROM_NUMBER,
-    Body: `رمز التحقق الخاص بك في مطعم البيت الشامي: ${code}`,
+    Body: `رمز التحقق الخاص بك في مطعم النمري: ${code}`,
   });
   const resp = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`, {
     method: 'POST',
