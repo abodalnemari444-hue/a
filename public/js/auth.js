@@ -1,12 +1,10 @@
 (function () {
-  const state = { mode: 'login', role: 'customer', pendingEmail: null };
+  const state = { mode: 'login', role: 'customer', pendingPhone: null };
 
   const el = {
     tabs: document.querySelectorAll('.auth-tab'),
     nameField: document.getElementById('nameField'),
-    phoneField: document.getElementById('phoneField'),
     fName: document.getElementById('fName'),
-    fEmail: document.getElementById('fEmail'),
     fPhone: document.getElementById('fPhone'),
     fPassword: document.getElementById('fPassword'),
     form: document.getElementById('authForm'),
@@ -15,7 +13,7 @@
     togglePassword: document.getElementById('togglePassword'),
 
     verifyForm: document.getElementById('verifyForm'),
-    verifyEmailLabel: document.getElementById('verifyEmailLabel'),
+    verifyPhoneLabel: document.getElementById('verifyPhoneLabel'),
     fCode: document.getElementById('fCode'),
     verifyError: document.getElementById('verifyError'),
     verifySubmit: document.getElementById('verifySubmit'),
@@ -66,9 +64,7 @@
   function applyMode() {
     const isRegister = state.mode === 'register';
     el.nameField.style.display = isRegister ? 'block' : 'none';
-    el.phoneField.style.display = isRegister ? 'block' : 'none';
     el.fName.required = isRegister;
-    el.fPhone.required = isRegister;
     const dict = t();
     el.submit.textContent = dict ? (isRegister ? dict.btn_create_account : dict.btn_login) : (isRegister ? 'إنشاء الحساب' : 'دخول');
     el.error.style.display = 'none';
@@ -87,9 +83,9 @@
     el.error.style.display = 'block';
   }
 
-  function showVerifyStep(email, phone, fallback) {
-    state.pendingEmail = email;
-    el.verifyEmailLabel.textContent = phone || email;
+  function showVerifyStep(phone, fallback) {
+    state.pendingPhone = phone;
+    el.verifyPhoneLabel.textContent = phone;
     document.querySelector('.auth-tabs').style.display = 'none';
     el.form.style.display = 'none';
     el.verifyForm.style.display = 'block';
@@ -104,7 +100,7 @@
   }
 
   function backToForm() {
-    state.pendingEmail = null;
+    state.pendingPhone = null;
     document.querySelector('.auth-tabs').style.display = 'flex';
     el.verifyForm.style.display = 'none';
     el.form.style.display = 'block';
@@ -118,12 +114,11 @@
 
     const isRegister = state.mode === 'register';
     const body = {
-      email: el.fEmail.value.trim(),
+      phone: el.fPhone.value.trim(),
       password: el.fPassword.value,
     };
     if (isRegister) {
       body.name = el.fName.value.trim();
-      body.phone = el.fPhone.value.trim();
       body.role = state.role;
     }
 
@@ -141,7 +136,7 @@
       }
       el.submit.disabled = false;
       if (data.pendingVerification) {
-        showVerifyStep(data.email, data.phone, data);
+        showVerifyStep(data.phone, data);
         return;
       }
       if (data.canChooseView) {
@@ -168,7 +163,7 @@
       const res = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: state.pendingEmail, code: el.fCode.value.trim() }),
+        body: JSON.stringify({ phone: state.pendingPhone, code: el.fCode.value.trim() }),
       });
       const data = await res.json();
       if (!data.ok) {
@@ -203,7 +198,7 @@
       const res = await fetch('/api/auth/resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: state.pendingEmail }),
+        body: JSON.stringify({ phone: state.pendingPhone }),
       });
       const data = await res.json();
       if (!data.ok) {

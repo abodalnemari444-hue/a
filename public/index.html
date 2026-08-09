@@ -32,12 +32,8 @@
           <input type="text" id="fName" placeholder="مثال: أحمد" maxlength="40" autocomplete="name" />
         </div>
         <div class="field">
-          <label data-i18n="label_email">البريد الإلكتروني</label>
-          <input type="email" id="fEmail" placeholder="example@mail.com" autocomplete="email" required />
-        </div>
-        <div class="field" id="phoneField" style="display:none;">
           <label data-i18n="label_phone">رقم الجوال</label>
-          <input type="tel" id="fPhone" placeholder="05xxxxxxxx" autocomplete="tel" />
+          <input type="tel" id="fPhone" placeholder="05xxxxxxxx" autocomplete="tel" required />
         </div>
         <div class="field">
           <label data-i18n="label_password">كلمة المرور</label>
@@ -53,7 +49,7 @@
       </form>
 
       <form id="verifyForm" style="display:none;">
-        <p class="verify-hint"><span data-i18n="verify_hint_before">أرسلنا رمز تحقق مكوّن من 6 أرقام إلى جوالك</span> <strong id="verifyEmailLabel"></strong><span data-i18n="verify_hint_after">، أدخله هنا لتفعيل حسابك.</span></p>
+        <p class="verify-hint"><span data-i18n="verify_hint_before">أرسلنا رمز تحقق مكوّن من 6 أرقام إلى جوالك</span> <strong id="verifyPhoneLabel"></strong><span data-i18n="verify_hint_after">، أدخله هنا لتفعيل حسابك.</span></p>
         <div class="field">
           <label data-i18n="label_code">رمز التحقق</label>
           <input type="text" id="fCode" class="code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code" required />

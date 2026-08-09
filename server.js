@@ -62,7 +62,7 @@ const menu = [
   { id: 'm12', category: 'حلويات', name: 'أم علي', desc: 'حلا ساخن بالمكسرات والقشطة', price: 20, emoji: '🍰', available: true },
 ];
 
-/** @type {Map<string, any>} email(lowercase) -> user */
+/** @type {Map<string, any>} phone -> user */
 const users = new Map();
 let userCounter = 100;
 
@@ -77,7 +77,7 @@ function loadUsers() {
   try {
     const raw = fs.readFileSync(USERS_FILE, 'utf8');
     const list = JSON.parse(raw);
-    list.forEach((u) => users.set(u.email, u));
+    list.forEach((u) => users.set(u.phone, u));
     const maxId = list.reduce((max, u) => Math.max(max, parseInt(String(u.id).replace('u', ''), 10) || 0), 100);
     userCounter = maxId;
     console.log(`[users] تم تحميل ${list.length} حساب محفوظ`);
@@ -98,9 +98,9 @@ function persistUsers() {
 loadUsers();
 
 // حساب المطبخ محصور فقط على المشرف - لا يقدر أي شخص آخر يسجّل بدور "مطبخ"
-const KITCHEN_ADMIN_EMAILS = ['abodalnemari444@gmail.com'];
+const KITCHEN_ADMIN_PHONES = ['0546547973'];
 
-/** @type {Map<string, any>} email(lowercase) -> pending registration awaiting phone verification */
+/** @type {Map<string, any>} phone -> pending registration awaiting SMS verification */
 const pendingRegistrations = new Map();
 const CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 45 * 1000;
@@ -157,7 +157,6 @@ function publicUser(user, activeRole) {
   return {
     id: user.id,
     name: user.name,
-    email: user.email,
     phone: user.phone,
     role: user.role,
     activeRole: activeRole || user.role,
@@ -178,31 +177,27 @@ function verifyPassword(password, salt, expectedHash) {
 // Auth API
 // ---------------------------------------------------------------------------
 
-function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim()); }
 function isValidPhone(v) { return /^\+?\d{7,15}$/.test(String(v || '').trim()); }
 
 app.post('/api/auth/register', async (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase();
   const password = String(req.body.password || '');
   const phone = String(req.body.phone || '').trim();
   const name = String(req.body.name || '').trim().slice(0, 40);
   const role = req.body.role;
 
   if (!name) return res.status(400).json({ ok: false, error: 'الاسم مطلوب' });
-  if (!isValidEmail(email)) return res.status(400).json({ ok: false, error: 'بريد إلكتروني غير صالح' });
-  if (password.length < 6) return res.status(400).json({ ok: false, error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
   if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'رقم جوال غير صالح' });
+  if (password.length < 6) return res.status(400).json({ ok: false, error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
   if (!['customer', 'kitchen'].includes(role)) return res.status(400).json({ ok: false, error: 'نوع حساب غير صالح' });
-  if (role === 'kitchen' && !KITCHEN_ADMIN_EMAILS.includes(email)) {
+  if (role === 'kitchen' && !KITCHEN_ADMIN_PHONES.includes(phone)) {
     return res.status(403).json({ ok: false, error: 'التسجيل كمطبخ متاح فقط للمشرف' });
   }
-  if (users.has(email)) return res.status(400).json({ ok: false, error: 'هذا البريد مستخدم مسبقاً' });
+  if (users.has(phone)) return res.status(400).json({ ok: false, error: 'رقم الجوال مستخدم مسبقاً' });
 
   const salt = crypto.randomBytes(16).toString('hex');
   const code = generateCode();
-  pendingRegistrations.set(email, {
+  pendingRegistrations.set(phone, {
     name,
-    email,
     phone,
     role,
     salt,
@@ -223,7 +218,6 @@ app.post('/api/auth/register', async (req, res) => {
   res.json({
     ok: true,
     pendingVerification: true,
-    email,
     phone,
     // بديل مؤقت عندما يتعذر إرسال SMS فعلياً (مثلاً ما فيه حساب Twilio) حتى لا يتوقف الاختبار
     ...(smsFailed ? { smsFailed: true, devCode: code } : {}),
@@ -231,13 +225,13 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 app.post('/api/auth/verify', (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase();
+  const phone = String(req.body.phone || '').trim();
   const code = String(req.body.code || '').trim();
-  const pending = pendingRegistrations.get(email);
+  const pending = pendingRegistrations.get(phone);
 
   if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا الحساب' });
   if (Date.now() > pending.codeExpires) {
-    pendingRegistrations.delete(email);
+    pendingRegistrations.delete(phone);
     return res.status(400).json({ ok: false, error: 'انتهت صلاحية الرمز، اطلب رمزاً جديداً' });
   }
   if (code !== pending.code) return res.status(400).json({ ok: false, error: 'رمز التحقق غير صحيح' });
@@ -246,24 +240,23 @@ app.post('/api/auth/verify', (req, res) => {
   const user = {
     id: 'u' + userCounter,
     name: pending.name,
-    email: pending.email,
     phone: pending.phone,
     role: pending.role,
     salt: pending.salt,
     passwordHash: pending.passwordHash,
     createdAt: Date.now(),
   };
-  users.set(email, user);
+  users.set(phone, user);
   persistUsers();
-  pendingRegistrations.delete(email);
+  pendingRegistrations.delete(phone);
 
   req.session.user = publicUser(user);
   res.json({ ok: true, user: publicUser(user) });
 });
 
 app.post('/api/auth/resend', async (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase();
-  const pending = pendingRegistrations.get(email);
+  const phone = String(req.body.phone || '').trim();
+  const pending = pendingRegistrations.get(phone);
   if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد تسجيل بانتظار التحقق لهذا الحساب' });
 
   const sinceLast = Date.now() - pending.lastSentAt;
@@ -287,11 +280,11 @@ app.post('/api/auth/resend', async (req, res) => {
 });
 
 app.post('/api/auth/login', (req, res) => {
-  const email = String(req.body.email || '').trim().toLowerCase();
+  const phone = String(req.body.phone || '').trim();
   const password = String(req.body.password || '');
-  const user = users.get(email);
+  const user = users.get(phone);
   if (!user || !verifyPassword(password, user.salt, user.passwordHash)) {
-    return res.status(401).json({ ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+    return res.status(401).json({ ok: false, error: 'رقم الجوال أو كلمة المرور غير صحيحة' });
   }
   // المشرف (حساب المطبخ) يقدر يختار كل مرة يدخل فيها: مطبخ ولا زبون
   const canChooseView = user.role === 'kitchen';
