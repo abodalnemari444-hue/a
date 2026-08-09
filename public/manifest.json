@@ -1,7 +1,7 @@
 {
   "name": "مطعم البيت الشامي",
   "short_name": "البيت الشامي",
-  "description": "اطلب طعامك المفضل بضغطة زر - منيو للعميل ولوحة مطبخ متزامنة",
+  "description": "اطلب طعامك المفضل بضغطة زر",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
