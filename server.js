@@ -13,10 +13,13 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-// مفتاح الجلسة لازم يبقى ثابت بين كل إعادة تشغيل، وإلا كل جلسات الدخول تنقطع فجأة
+// مفتاح الجلسة لازم يبقى ثابت بين كل إعادة تشغيل، وإلا كل جلسات الدخول تنقطع فجأة.
+// على منصات الاستضافة (مثل Render) القرص قد لا يبقى بين عمليات النشر، لذا نفضّل
+// متغيّر بيئة SESSION_SECRET إن وُجد، وإلا نعتمد على ملف محلي (مناسب للتشغيل على الجهاز).
 const DATA_DIR = path.join(__dirname, 'data');
 const SESSION_SECRET_FILE = path.join(DATA_DIR, 'session-secret.txt');
 function getSessionSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
   try {
     return fs.readFileSync(SESSION_SECRET_FILE, 'utf8').trim();
   } catch {
