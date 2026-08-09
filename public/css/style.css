@@ -501,6 +501,14 @@ img, svg { max-width: 100%; display: block; }
   text-align: center;
   background: #ffffff;
 }
+.landing .big-heart { font-size: 72px; line-height: 1; margin-bottom: 4px; animation: heartbeat 1.4s ease-in-out infinite; }
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.15); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.1); }
+  60% { transform: scale(1); }
+}
 .landing .logo-emoji-big { font-size: 56px; margin-bottom: 6px; }
 .landing h1 { margin: 0 0 4px; font-size: 26px; }
 .landing p.tagline { margin: 0 0 32px; color: var(--color-text-muted); font-size: 14px; }
