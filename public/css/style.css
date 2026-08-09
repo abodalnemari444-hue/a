@@ -493,7 +493,7 @@ img, svg { max-width: 100%; display: block; }
   justify-content: center;
   padding: 32px 20px;
   text-align: center;
-  background: radial-gradient(circle at 50% 0%, var(--color-primary-light), var(--color-bg) 60%);
+  background: #ffffff;
 }
 .landing .logo-emoji-big { font-size: 56px; margin-bottom: 6px; }
 .landing h1 { margin: 0 0 4px; font-size: 26px; }
