@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shami-restaurant-v4';
+const CACHE_NAME = 'shami-restaurant-v5';
 const CORE_ASSETS = [
   '/css/style.css',
   '/js/common.js',
@@ -42,18 +42,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // شبكة أولاً دائماً لملفات CSS/JS حتى تظهر أي تحديثات فوراً بدون انتظار زيارة ثانية،
+  // والكاش يُستخدم فقط كخطة بديلة عند انقطاع الاتصال (أوفلاين).
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const network = fetch(event.request)
-        .then((resp) => {
-          if (resp && resp.status === 200) {
-            const clone = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return resp;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
+    fetch(event.request)
+      .then((resp) => {
+        if (resp && resp.status === 200) {
+          const clone = resp.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return resp;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
