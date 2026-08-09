@@ -153,8 +153,15 @@ function serializeOrder(order) {
   return { ...order, statusLabel: STATUS_LABELS[order.status] || order.status };
 }
 
-function publicUser(user) {
-  return { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role };
+function publicUser(user, activeRole) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    activeRole: activeRole || user.role,
+  };
 }
 
 function hashPassword(password, salt) {
@@ -286,8 +293,21 @@ app.post('/api/auth/login', (req, res) => {
   if (!user || !verifyPassword(password, user.salt, user.passwordHash)) {
     return res.status(401).json({ ok: false, error: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
   }
-  req.session.user = publicUser(user);
-  res.json({ ok: true, user: publicUser(user) });
+  // المشرف (حساب المطبخ) يقدر يختار كل مرة يدخل فيها: مطبخ ولا زبون
+  const canChooseView = user.role === 'kitchen';
+  const activeRole = canChooseView ? (req.session.user?.activeRole || 'kitchen') : user.role;
+  req.session.user = publicUser(user, activeRole);
+  res.json({ ok: true, user: publicUser(user, activeRole), canChooseView });
+});
+
+app.post('/api/auth/set-view', (req, res) => {
+  const current = req.session.user;
+  if (!current) return res.status(401).json({ ok: false, error: 'غير مسجّل دخول' });
+  if (current.role !== 'kitchen') return res.status(403).json({ ok: false, error: 'غير مخوّل' });
+  const requested = req.body.role;
+  if (!['kitchen', 'customer'].includes(requested)) return res.status(400).json({ ok: false, error: 'قيمة غير صالحة' });
+  req.session.user = { ...current, activeRole: requested };
+  res.json({ ok: true, user: req.session.user });
 });
 
 app.post('/api/auth/logout', (req, res) => {
@@ -308,14 +328,16 @@ function requireAuth(role) {
   return (req, res, next) => {
     const u = req.session.user;
     if (!u) return res.redirect('/index.html');
-    if (role && u.role !== role) return res.redirect(u.role === 'kitchen' ? '/kitchen.html' : '/menu.html');
+    const active = u.activeRole || u.role;
+    if (role && active !== role) return res.redirect(active === 'kitchen' ? '/kitchen.html' : '/menu.html');
     next();
   };
 }
 
 app.get(['/', '/index.html'], (req, res) => {
   if (req.session.user) {
-    return res.redirect(req.session.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html');
+    const active = req.session.user.activeRole || req.session.user.role;
+    return res.redirect(active === 'kitchen' ? '/kitchen.html' : '/menu.html');
   }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -359,12 +381,13 @@ function broadcastOrder(order) {
 
 io.on('connection', (socket) => {
   const me = socket.request.session.user;
-  socket.join(me.role);
+  const myRole = me.activeRole || me.role;
+  socket.join(myRole);
   socket.join('user:' + me.id);
 
   socket.on('order:create', (payload, ack) => {
     try {
-      if (me.role !== 'customer') throw new Error('غير مخوّل');
+      if (myRole !== 'customer') throw new Error('غير مخوّل');
       const items = Array.isArray(payload?.items) ? payload.items : [];
       if (items.length === 0) throw new Error('السلة فارغة');
       const tableNumber = (payload?.tableNumber || '').toString().trim().slice(0, 10);
@@ -403,7 +426,7 @@ io.on('connection', (socket) => {
 
   socket.on('order:status', (payload, ack) => {
     try {
-      if (me.role !== 'kitchen') throw new Error('غير مخوّل');
+      if (myRole !== 'kitchen') throw new Error('غير مخوّل');
       const order = orders.get(payload?.id);
       if (!order) throw new Error('الطلب غير موجود');
       const status = payload.status;
@@ -421,7 +444,7 @@ io.on('connection', (socket) => {
   socket.on('orders:sync', (_payload, ack) => {
     if (typeof ack !== 'function') return;
     let list = [...orders.values()];
-    if (me.role === 'customer') list = list.filter((o) => o.customerId === me.id);
+    if (myRole === 'customer') list = list.filter((o) => o.customerId === me.id);
     ack(list.map(serializeOrder).sort((a, b) => b.createdAt - a.createdAt));
   });
 });

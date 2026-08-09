@@ -21,7 +21,35 @@
     verifySubmit: document.getElementById('verifySubmit'),
     resendCodeBtn: document.getElementById('resendCodeBtn'),
     backToFormBtn: document.getElementById('backToFormBtn'),
+
+    viewChoice: document.getElementById('viewChoice'),
+    choiceKitchen: document.getElementById('choiceKitchen'),
+    choiceCustomer: document.getElementById('choiceCustomer'),
   };
+
+  function showViewChoice() {
+    document.querySelector('.auth-tabs').style.display = 'none';
+    el.form.style.display = 'none';
+    el.viewChoice.style.display = 'block';
+  }
+
+  async function chooseView(role) {
+    try {
+      const res = await fetch('/api/auth/set-view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      const data = await res.json();
+      if (!data.ok) { showError(data.error || 'حدث خطأ'); return; }
+      window.location.href = role === 'kitchen' ? '/kitchen.html' : '/menu.html';
+    } catch (err) {
+      showError('تعذر الاتصال بالسيرفر');
+    }
+  }
+
+  el.choiceKitchen.addEventListener('click', () => chooseView('kitchen'));
+  el.choiceCustomer.addEventListener('click', () => chooseView('customer'));
 
   el.togglePassword.addEventListener('click', () => {
     const hidden = el.fPassword.type === 'password';
@@ -114,6 +142,10 @@
       el.submit.disabled = false;
       if (data.pendingVerification) {
         showVerifyStep(data.email, data.phone, data);
+        return;
+      }
+      if (data.canChooseView) {
+        showViewChoice();
         return;
       }
       window.location.href = data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';

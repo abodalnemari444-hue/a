@@ -65,6 +65,26 @@
         <button type="button" class="link-btn" id="resendCodeBtn">لم يصلني الرمز؟ إعادة الإرسال</button>
         <button type="button" class="btn btn-outline btn-block" style="margin-top:8px;" id="backToFormBtn" data-i18n="btn_back">رجوع</button>
       </form>
+
+      <div id="viewChoice" style="display:none;">
+        <p class="verify-hint">اختر طريقة الدخول لهذه الجلسة</p>
+        <button type="button" class="role-card kitchen" id="choiceKitchen" style="margin-bottom:12px;">
+          <div class="r-icon">👨‍🍳</div>
+          <div class="r-text">
+            <h3>الدخول كمطبخ</h3>
+            <p>استقبال الطلبات وإدارتها</p>
+          </div>
+          <div class="r-go">‹</div>
+        </button>
+        <button type="button" class="role-card customer" id="choiceCustomer">
+          <div class="r-icon">🧑‍🍳</div>
+          <div class="r-text">
+            <h3>الدخول كزبون</h3>
+            <p>تصفح المنيو وإرسال طلب</p>
+          </div>
+          <div class="r-go">‹</div>
+        </button>
+      </div>
     </div>
 
     <button class="install-hint">📲 ثبّت التطبيق على جوالك</button>
