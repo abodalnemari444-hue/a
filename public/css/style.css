@@ -137,6 +137,12 @@ img, svg { max-width: 100%; display: block; }
 }
 .icon-btn:active { transform: scale(0.94); }
 
+.logout-btn {
+  background: #ffffff;
+  color: #000000;
+  border: 1.5px solid #000000;
+}
+
 .badge-count {
   position: absolute;
   top: -4px;
