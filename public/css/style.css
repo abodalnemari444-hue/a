@@ -873,7 +873,7 @@ img, svg { max-width: 100%; display: block; }
 
 @media (min-width: 760px) {
   .menu-grid { grid-template-columns: 1fr 1fr; }
-  .kanban { grid-template-columns: 1fr 1fr 1fr; }
+  .kanban { grid-template-columns: 1fr 1fr 1fr; align-items: stretch; min-height: 70vh; }
   .kanban-col:not(:last-child) {
     padding-bottom: 0;
     padding-inline-end: 16px;
