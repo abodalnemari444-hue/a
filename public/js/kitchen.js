@@ -131,4 +131,9 @@
 
   loadMe();
   renderBoard();
+
+  if (sessionStorage.getItem('shami_show_welcome')) {
+    sessionStorage.removeItem('shami_show_welcome');
+    showToast('يا مرحبا نورت المطعم 🤍');
+  }
 })();

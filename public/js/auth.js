@@ -40,6 +40,7 @@
       });
       const data = await res.json();
       if (!data.ok) { showError(data.error || 'حدث خطأ'); return; }
+      sessionStorage.setItem('shami_show_welcome', '1');
       window.location.href = role === 'kitchen' ? '/kitchen.html' : '/menu.html';
     } catch (err) {
       showError('تعذر الاتصال بالسيرفر');
@@ -143,6 +144,7 @@
         showViewChoice();
         return;
       }
+      sessionStorage.setItem('shami_show_welcome', '1');
       window.location.href = data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';
     } catch (err) {
       showError('تعذر الاتصال بالسيرفر');
@@ -171,6 +173,7 @@
         el.verifySubmit.disabled = false;
         return;
       }
+      sessionStorage.setItem('shami_show_welcome', '1');
       window.location.href = data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';
     } catch (err) {
       showVerifyError('تعذر الاتصال بالسيرفر');

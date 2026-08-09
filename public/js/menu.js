@@ -259,5 +259,9 @@
     if (!user) return;
     await loadMenu();
     socket.on('connect', loadMyOrdersFromServer);
+    if (sessionStorage.getItem('shami_show_welcome')) {
+      sessionStorage.removeItem('shami_show_welcome');
+      showToast('يا مرحبا نورت المطعم 🤍');
+    }
   })();
 })();
