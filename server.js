@@ -97,6 +97,9 @@ function persistUsers() {
 
 loadUsers();
 
+// حساب المطبخ محصور فقط على المشرف - لا يقدر أي شخص آخر يسجّل بدور "مطبخ"
+const KITCHEN_ADMIN_EMAILS = ['abodalnemari444@gmail.com'];
+
 /** @type {Map<string, any>} email(lowercase) -> pending registration awaiting phone verification */
 const pendingRegistrations = new Map();
 const CODE_TTL_MS = 10 * 60 * 1000;
@@ -183,6 +186,9 @@ app.post('/api/auth/register', async (req, res) => {
   if (password.length < 6) return res.status(400).json({ ok: false, error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
   if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'رقم جوال غير صالح' });
   if (!['customer', 'kitchen'].includes(role)) return res.status(400).json({ ok: false, error: 'نوع حساب غير صالح' });
+  if (role === 'kitchen' && !KITCHEN_ADMIN_EMAILS.includes(email)) {
+    return res.status(403).json({ ok: false, error: 'التسجيل كمطبخ متاح فقط للمشرف' });
+  }
   if (users.has(email)) return res.status(400).json({ ok: false, error: 'هذا البريد مستخدم مسبقاً' });
 
   const salt = crypto.randomBytes(16).toString('hex');

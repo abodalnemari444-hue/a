@@ -3,8 +3,6 @@
 
   const el = {
     tabs: document.querySelectorAll('.auth-tab'),
-    roleSegment: document.getElementById('roleSegment'),
-    roleBtns: document.querySelectorAll('.seg-btn'),
     nameField: document.getElementById('nameField'),
     phoneField: document.getElementById('phoneField'),
     fName: document.getElementById('fName'),
@@ -56,13 +54,6 @@
     });
   });
 
-  el.roleBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      state.role = btn.dataset.role;
-      el.roleBtns.forEach((b) => b.classList.toggle('active', b === btn));
-    });
-  });
-
   function showError(msg) {
     el.error.textContent = msg;
     el.error.style.display = 'block';
@@ -72,7 +63,6 @@
     state.pendingEmail = email;
     el.verifyEmailLabel.textContent = phone || email;
     document.querySelector('.auth-tabs').style.display = 'none';
-    document.getElementById('roleSegment').style.display = 'none';
     el.form.style.display = 'none';
     el.verifyForm.style.display = 'block';
     el.verifyError.style.display = 'none';
@@ -88,7 +78,6 @@
   function backToForm() {
     state.pendingEmail = null;
     document.querySelector('.auth-tabs').style.display = 'flex';
-    document.getElementById('roleSegment').style.display = 'flex';
     el.verifyForm.style.display = 'none';
     el.form.style.display = 'block';
   }
