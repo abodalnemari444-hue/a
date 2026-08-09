@@ -1,5 +1,6 @@
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
@@ -44,6 +45,38 @@ const menu = [
 /** @type {Map<string, any>} email(lowercase) -> user */
 const users = new Map();
 let userCounter = 100;
+
+// ---------------------------------------------------------------------------
+// حفظ الحسابات على القرص حتى لا تُفقد عند إعادة تشغيل السيرفر
+// (الطلبات والمنيو تبقى في الذاكرة فقط كما هو متفق، لكن الحسابات لازم تبقى)
+// ---------------------------------------------------------------------------
+
+const DATA_DIR = path.join(__dirname, 'data');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+
+function loadUsers() {
+  try {
+    const raw = fs.readFileSync(USERS_FILE, 'utf8');
+    const list = JSON.parse(raw);
+    list.forEach((u) => users.set(u.email, u));
+    const maxId = list.reduce((max, u) => Math.max(max, parseInt(String(u.id).replace('u', ''), 10) || 0), 100);
+    userCounter = maxId;
+    console.log(`[users] تم تحميل ${list.length} حساب محفوظ`);
+  } catch (err) {
+    // لا يوجد ملف بعد (أول تشغيل) - نبدأ بقائمة فارغة
+  }
+}
+
+function persistUsers() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(USERS_FILE, JSON.stringify([...users.values()], null, 2), 'utf8');
+  } catch (err) {
+    console.error('[users] فشل حفظ بيانات الحسابات:', err.message);
+  }
+}
+
+loadUsers();
 
 /** @type {Map<string, any>} email(lowercase) -> pending registration awaiting phone verification */
 const pendingRegistrations = new Map();
@@ -189,6 +222,7 @@ app.post('/api/auth/verify', (req, res) => {
     createdAt: Date.now(),
   };
   users.set(email, user);
+  persistUsers();
   pendingRegistrations.delete(email);
 
   req.session.user = publicUser(user);

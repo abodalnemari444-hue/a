@@ -4,3 +4,4 @@ npm-debug.log*
 .claude/
 server_out.log
 server_err.log
+data/
