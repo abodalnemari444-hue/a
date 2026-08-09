@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
-const session = require('express-session');
+const cookieSession = require('cookie-session');
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -13,11 +13,28 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-const sessionMiddleware = session({
-  secret: crypto.randomBytes(32).toString('hex'),
-  resave: false,
-  saveUninitialized: false,
-  cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 },
+// مفتاح الجلسة لازم يبقى ثابت بين كل إعادة تشغيل، وإلا كل جلسات الدخول تنقطع فجأة
+const DATA_DIR = path.join(__dirname, 'data');
+const SESSION_SECRET_FILE = path.join(DATA_DIR, 'session-secret.txt');
+function getSessionSecret() {
+  try {
+    return fs.readFileSync(SESSION_SECRET_FILE, 'utf8').trim();
+  } catch {
+    const secret = crypto.randomBytes(32).toString('hex');
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SESSION_SECRET_FILE, secret, 'utf8');
+    return secret;
+  }
+}
+
+// جلسات مخزّنة داخل الكوكي نفسه (موقّعة، بدون تخزين على السيرفر) حتى تبقى
+// نشطة حتى لو أعيد تشغيل السيرفر - المهم بس ثبات المفتاح أعلاه
+const sessionMiddleware = cookieSession({
+  name: 'shami_session',
+  keys: [getSessionSecret()],
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  httpOnly: true,
+  sameSite: 'lax',
 });
 
 app.use(express.json());
@@ -51,7 +68,6 @@ let userCounter = 100;
 // (الطلبات والمنيو تبقى في الذاكرة فقط كما هو متفق، لكن الحسابات لازم تبقى)
 // ---------------------------------------------------------------------------
 
-const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
 
 function loadUsers() {
@@ -266,7 +282,8 @@ app.post('/api/auth/login', (req, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
-  req.session.destroy(() => res.json({ ok: true }));
+  req.session = null;
+  res.json({ ok: true });
 });
 
 app.get('/api/auth/me', (req, res) => {
