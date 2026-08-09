@@ -1,6 +1,6 @@
 {
-  "name": "مطعم النمري",
-  "short_name": "النمري",
+  "name": "مطعم يا حبايب",
+  "short_name": "يا حبايب",
   "description": "اطلب طعامك المفضل بضغطة زر",
   "start_url": "/index.html",
   "scope": "/",
