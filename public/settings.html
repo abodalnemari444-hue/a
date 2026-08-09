@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <script>if (localStorage.getItem('shami_theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>الإعدادات - مطعم البيت الشامي</title>
+  <meta name="theme-color" content="#d9622b" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="البيت الشامي" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <button class="icon-btn" id="backBtn" title="رجوع">←</button>
+      <span>الإعدادات</span>
+    </div>
+    <span class="conn-dot" style="display:none;"></span>
+  </header>
+
+  <main class="screen-pad">
+    <div class="section-title">التطبيق</div>
+    <div class="settings-list">
+      <div class="settings-row">
+        <div class="s-icon">🔔</div>
+        <div class="s-text">
+          <h3>صوت التنبيه</h3>
+          <p>تشغيل صوت عند وصول طلب جديد (شاشة المطبخ)</p>
+        </div>
+        <button class="toggle-switch" id="soundToggle" aria-label="صوت التنبيه"></button>
+      </div>
+
+      <div class="settings-row">
+        <div class="s-icon">🌙</div>
+        <div class="s-text">
+          <h3>الوضع الداكن</h3>
+          <p>مظهر داكن مريح للعين</p>
+        </div>
+        <button class="toggle-switch" id="darkToggle" aria-label="الوضع الداكن"></button>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/settings.js"></script>
+</body>
+</html>

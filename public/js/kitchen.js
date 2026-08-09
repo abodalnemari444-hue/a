@@ -53,6 +53,7 @@
   });
 
   function beep() {
+    if (localStorage.getItem('shami_sound_enabled') === 'off') return;
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();

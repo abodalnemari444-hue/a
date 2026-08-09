@@ -302,6 +302,10 @@ app.get('/kitchen.html', requireAuth('kitchen'), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'kitchen.html'));
 });
 
+app.get('/settings.html', requireAuth(), (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'settings.html'));
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ---------------------------------------------------------------------------
