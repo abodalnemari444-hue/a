@@ -42,4 +42,10 @@
       window.location.href = '/menu.html';
     }
   });
+
+  const logoutRow = document.getElementById('logoutRow');
+  logoutRow.addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/index.html';
+  });
 })();
