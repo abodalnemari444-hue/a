@@ -2,6 +2,17 @@
   const soundToggle = document.getElementById('soundToggle');
   const darkToggle = document.getElementById('darkToggle');
   const backBtn = document.getElementById('backBtn');
+  const langSelect = document.getElementById('langSelect');
+
+  if (window.ShamiI18n) {
+    const { LANGUAGES, currentLang, applyLanguage } = window.ShamiI18n;
+    langSelect.innerHTML = LANGUAGES.map((l) => `<option value="${l.code}">${l.name}</option>`).join('');
+    langSelect.value = currentLang();
+    langSelect.addEventListener('change', () => {
+      localStorage.setItem('shami_lang', langSelect.value);
+      applyLanguage(langSelect.value);
+    });
+  }
 
   const soundEnabled = localStorage.getItem('shami_sound_enabled') !== 'off';
   const darkEnabled = localStorage.getItem('shami_theme') === 'dark';

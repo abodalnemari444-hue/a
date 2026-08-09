@@ -34,14 +34,14 @@
     <div class="tabs" id="tabs"></div>
     <div class="menu-grid" id="menuGrid"></div>
 
-    <div class="section-title" id="myOrdersTitle" style="display:none;">طلباتي</div>
+    <div class="section-title" id="myOrdersTitle" style="display:none;" data-i18n="my_orders_title">طلباتي</div>
     <div id="myOrders"></div>
   </main>
 
   <div class="cart-bar" id="cartBar">
     <div class="left">
       <span class="count-pill" id="cartBarCount">0</span>
-      <span>عرض السلة</span>
+      <span data-i18n="cart_view">عرض السلة</span>
     </div>
     <div id="cartBarTotal">0 ر.س</div>
   </div>
@@ -50,30 +50,31 @@
   <div class="overlay" id="cartOverlay">
     <div class="sheet">
       <div class="sheet-handle"></div>
-      <h2>سلتك</h2>
+      <h2 data-i18n="cart_title">سلتك</h2>
       <div id="cartItemsList"></div>
 
       <div class="field" style="margin-top:14px;">
-        <label>رقم الطاولة</label>
+        <label data-i18n="label_table">رقم الطاولة</label>
         <input type="text" id="tableNumber" placeholder="مثال: 5" maxlength="10" required />
       </div>
       <div class="field">
-        <label>ملاحظات (اختياري)</label>
+        <label data-i18n="label_notes">ملاحظات (اختياري)</label>
         <textarea id="orderNotes" placeholder="مثال: بدون بصل" maxlength="200"></textarea>
       </div>
 
       <div class="total-row">
-        <span>الإجمالي</span>
+        <span data-i18n="label_total">الإجمالي</span>
         <span id="cartTotal">0 ر.س</span>
       </div>
 
-      <button class="btn btn-primary btn-block" id="submitOrderBtn">إرسال الطلب للمطبخ</button>
-      <button class="btn btn-outline btn-block" style="margin-top:8px;" id="closeCartBtn">إغلاق</button>
+      <button class="btn btn-primary btn-block" id="submitOrderBtn" data-i18n="btn_submit_order">إرسال الطلب للمطبخ</button>
+      <button class="btn btn-outline btn-block" style="margin-top:8px;" id="closeCartBtn" data-i18n="btn_close">إغلاق</button>
     </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/common.js"></script>
+  <script src="/js/i18n.js"></script>
   <script src="/js/menu.js"></script>
 </body>
 </html>

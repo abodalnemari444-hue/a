@@ -16,7 +16,7 @@
   <header class="topbar">
     <div class="brand">
       <button class="icon-btn" id="backBtn" title="رجوع">←</button>
-      <span>الإعدادات</span>
+      <span data-i18n="settings_title">الإعدادات</span>
     </div>
     <span class="conn-dot" style="display:none;"></span>
   </header>
@@ -27,7 +27,7 @@
       <div class="settings-row">
         <div class="s-icon">🔔</div>
         <div class="s-text">
-          <h3>صوت التنبيه</h3>
+          <h3 data-i18n="settings_sound_title">صوت التنبيه</h3>
           <p>تشغيل صوت عند وصول طلب جديد (شاشة المطبخ)</p>
         </div>
         <button class="toggle-switch" id="soundToggle" aria-label="صوت التنبيه"></button>
@@ -36,15 +36,25 @@
       <div class="settings-row">
         <div class="s-icon">🌙</div>
         <div class="s-text">
-          <h3>الوضع الداكن</h3>
+          <h3 data-i18n="settings_dark_title">الوضع الداكن</h3>
           <p>مظهر داكن مريح للعين</p>
         </div>
         <button class="toggle-switch" id="darkToggle" aria-label="الوضع الداكن"></button>
+      </div>
+
+      <div class="settings-row">
+        <div class="s-icon">🌐</div>
+        <div class="s-text">
+          <h3 data-i18n="settings_lang_title">اللغة</h3>
+          <p>لغة واجهة التطبيق (ترجمة آلية تقريبية)</p>
+        </div>
+        <select id="langSelect" class="lang-select"></select>
       </div>
     </div>
   </main>
 
   <script src="/js/common.js"></script>
+  <script src="/js/i18n.js"></script>
   <script src="/js/settings.js"></script>
 </body>
 </html>

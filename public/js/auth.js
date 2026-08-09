@@ -32,13 +32,19 @@
     el.togglePassword.setAttribute('aria-label', hidden ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
   });
 
+  function t() {
+    const i18n = window.ShamiI18n;
+    return i18n ? i18n.dict[i18n.currentLang()] || i18n.dict.ar : null;
+  }
+
   function applyMode() {
     const isRegister = state.mode === 'register';
     el.nameField.style.display = isRegister ? 'block' : 'none';
     el.phoneField.style.display = isRegister ? 'block' : 'none';
     el.fName.required = isRegister;
     el.fPhone.required = isRegister;
-    el.submit.textContent = isRegister ? 'إنشاء الحساب' : 'دخول';
+    const dict = t();
+    el.submit.textContent = dict ? (isRegister ? dict.btn_create_account : dict.btn_login) : (isRegister ? 'إنشاء الحساب' : 'دخول');
     el.error.style.display = 'none';
   }
 
@@ -161,11 +167,12 @@
     const remaining = Math.ceil((resendCooldownUntil - Date.now()) / 1000);
     if (remaining > 0) {
       el.resendCodeBtn.disabled = true;
-      el.resendCodeBtn.textContent = `إعادة الإرسال بعد ${remaining} ثانية`;
+      el.resendCodeBtn.textContent = `⏳ ${remaining}s`;
       setTimeout(tickResendBtn, 1000);
     } else {
+      const dict = t();
       el.resendCodeBtn.disabled = false;
-      el.resendCodeBtn.textContent = 'لم يصلني الرمز؟ إعادة الإرسال';
+      el.resendCodeBtn.textContent = dict ? dict.btn_resend : 'لم يصلني الرمز؟ إعادة الإرسال';
     }
   }
 
@@ -199,4 +206,5 @@
   });
 
   applyMode();
+  tickResendBtn();
 })();

@@ -16,7 +16,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="logo-emoji">👨‍🍳</span>
-      <span>لوحة المطبخ</span>
+      <span data-i18n="kitchen_title">لوحة المطبخ</span>
       <span class="role-badge" id="userNameBadge">مطبخ</span>
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
@@ -29,15 +29,15 @@
   <main class="screen-pad">
     <div class="kanban">
       <div class="kanban-col">
-        <h2>🆕 طلبات جديدة <span class="count" id="countPending">0</span></h2>
+        <h2>🆕 <span data-i18n="col_new">طلبات جديدة</span> <span class="count" id="countPending">0</span></h2>
         <div class="col-list" id="colPending"></div>
       </div>
       <div class="kanban-col">
-        <h2>🔥 قيد التحضير <span class="count" id="countPreparing">0</span></h2>
+        <h2>🔥 <span data-i18n="col_preparing">قيد التحضير</span> <span class="count" id="countPreparing">0</span></h2>
         <div class="col-list" id="colPreparing"></div>
       </div>
       <div class="kanban-col">
-        <h2>✅ جاهزة للتسليم <span class="count" id="countReady">0</span></h2>
+        <h2>✅ <span data-i18n="col_ready">جاهزة للتسليم</span> <span class="count" id="countReady">0</span></h2>
         <div class="col-list" id="colReady"></div>
       </div>
     </div>
@@ -45,6 +45,7 @@
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/common.js"></script>
+  <script src="/js/i18n.js"></script>
   <script src="/js/kitchen.js"></script>
 </body>
 </html>
