@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shami-restaurant-v6';
+const CACHE_NAME = 'shami-restaurant-v7';
 const CORE_ASSETS = [
   '/css/style.css',
   '/js/common.js',
@@ -8,6 +8,7 @@ const CORE_ASSETS = [
   '/js/kitchen.js',
   '/js/settings.js',
   '/js/chat.js',
+  '/js/profile.js',
   '/manifest.json',
 ];
 

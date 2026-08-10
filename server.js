@@ -188,6 +188,7 @@ function publicUser(user, activeRole) {
     phone: user.phone,
     role: user.role,
     activeRole: activeRole || user.role,
+    createdAt: user.createdAt,
   };
 }
 
@@ -373,6 +374,10 @@ app.get('/kitchen.html', requireAuth('kitchen'), (req, res) => {
 
 app.get('/settings.html', requireAuth(), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'settings.html'));
+});
+
+app.get('/profile.html', requireAuth(), (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
