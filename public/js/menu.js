@@ -26,12 +26,11 @@
     tableNumber: document.getElementById('tableNumber'),
     orderNotes: document.getElementById('orderNotes'),
     userNameBadge: document.getElementById('userNameBadge'),
-    logoutBtn: document.getElementById('logoutBtn'),
+    homeTabBtn: document.getElementById('homeTabBtn'),
   };
 
-  el.logoutBtn.addEventListener('click', async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/index.html';
+  el.homeTabBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   async function loadMe() {

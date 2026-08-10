@@ -82,6 +82,7 @@ img, svg { max-width: 100%; display: block; }
   padding-bottom: 90px;
   min-height: 100vh;
 }
+.screen-pad.with-bottom-nav { padding-bottom: 150px; }
 
 /* ---------- Top bar ---------- */
 .topbar {
@@ -303,7 +304,7 @@ img, svg { max-width: 100%; display: block; }
 /* ---------- Cart bar ---------- */
 .cart-bar {
   position: fixed;
-  bottom: 14px;
+  bottom: 78px;
   right: 16px;
   left: 16px;
   max-width: 688px;
@@ -318,7 +319,7 @@ img, svg { max-width: 100%; display: block; }
   box-shadow: var(--shadow-lg);
   cursor: pointer;
   z-index: 45;
-  transform: translateY(120%);
+  transform: translateY(calc(100% + 100px));
   transition: transform .25s ease;
 }
 .cart-bar.show { transform: translateY(0); }
@@ -331,26 +332,41 @@ img, svg { max-width: 100%; display: block; }
   font-size: 13px;
 }
 
-.chat-fab {
+.bottom-nav {
   position: fixed;
-  bottom: 90px;
-  inset-inline-start: 16px;
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  border: none;
-  background: var(--color-primary);
-  color: #fff;
-  font-size: 24px;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  max-width: 720px;
+  margin: 0 auto;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   display: flex;
+  align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 50;
+  box-shadow: 0 -4px 16px rgba(43, 35, 32, 0.06);
+}
+.bottom-nav-item {
+  flex: 1;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-lg);
+  gap: 3px;
+  padding: 9px 4px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
   cursor: pointer;
-  z-index: 46;
-  transition: transform .15s ease;
+  position: relative;
 }
-.chat-fab:active { transform: scale(0.92); }
+.bottom-nav-item .n-icon { font-size: 21px; line-height: 1; }
+.bottom-nav-item.active { color: var(--color-primary); }
+.bottom-nav-item .badge-count { top: 2px; left: auto; inset-inline-end: 22%; }
 
 /* ---------- Bottom sheet / modal ---------- */
 .overlay {
