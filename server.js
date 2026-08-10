@@ -140,6 +140,34 @@ async function sendVerificationSms(toPhone, code) {
 const orders = new Map();
 let orderCounter = 1000;
 
+// ---------------------------------------------------------------------------
+// محادثة خدمة العملاء بين الزبون والمشرف (في الذاكرة فقط، مثل الطلبات)
+// ---------------------------------------------------------------------------
+/** @type {Map<string, any>} customerId -> { customerId, customerName, messages: [], unreadForAdmin, unreadForCustomer, updatedAt } */
+const chatThreads = new Map();
+let chatMessageCounter = 0;
+
+function getOrCreateThread(customerId, customerName) {
+  let thread = chatThreads.get(customerId);
+  if (!thread) {
+    thread = { customerId, customerName, messages: [], unreadForAdmin: 0, unreadForCustomer: 0, updatedAt: Date.now() };
+    chatThreads.set(customerId, thread);
+  }
+  return thread;
+}
+
+function threadSummary(thread) {
+  const last = thread.messages[thread.messages.length - 1];
+  return {
+    customerId: thread.customerId,
+    customerName: thread.customerName,
+    lastMessage: last ? last.text : '',
+    lastSender: last ? last.sender : null,
+    unreadForAdmin: thread.unreadForAdmin,
+    updatedAt: thread.updatedAt,
+  };
+}
+
 const STATUS_FLOW = ['pending', 'preparing', 'ready', 'completed'];
 const STATUS_LABELS = {
   pending: 'بانتظار موافقة المطبخ',
@@ -439,6 +467,68 @@ io.on('connection', (socket) => {
     let list = [...orders.values()];
     if (myRole === 'customer') list = list.filter((o) => o.customerId === me.id);
     ack(list.map(serializeOrder).sort((a, b) => b.createdAt - a.createdAt));
+  });
+
+  // ---- خدمة العملاء: محادثة مباشرة بين الزبون والمشرف ----
+
+  socket.on('chat:send', (payload, ack) => {
+    try {
+      const text = String(payload?.text || '').trim().slice(0, 1000);
+      if (!text) throw new Error('الرسالة فارغة');
+
+      let customerId;
+      let sender;
+      if (myRole === 'customer') {
+        customerId = me.id;
+        sender = 'customer';
+      } else if (myRole === 'kitchen') {
+        customerId = String(payload?.customerId || '');
+        if (!chatThreads.has(customerId)) throw new Error('المحادثة غير موجودة');
+        sender = 'admin';
+      } else {
+        throw new Error('غير مخوّل');
+      }
+
+      const thread = getOrCreateThread(customerId, myRole === 'customer' ? me.name : chatThreads.get(customerId).customerName);
+      chatMessageCounter += 1;
+      const message = { id: 'cm' + chatMessageCounter, sender, text, createdAt: Date.now() };
+      thread.messages.push(message);
+      thread.updatedAt = message.createdAt;
+      if (sender === 'customer') thread.unreadForAdmin += 1;
+      else thread.unreadForCustomer += 1;
+
+      io.to('user:' + customerId).emit('chat:message', { customerId, message });
+      io.to('kitchen').emit('chat:message', { customerId, message });
+      io.to('kitchen').emit('chat:threads', [...chatThreads.values()].map(threadSummary).sort((a, b) => b.updatedAt - a.updatedAt));
+
+      if (typeof ack === 'function') ack({ ok: true, message });
+    } catch (err) {
+      if (typeof ack === 'function') ack({ ok: false, error: err.message });
+    }
+  });
+
+  socket.on('chat:history', (payload, ack) => {
+    if (typeof ack !== 'function') return;
+    const customerId = myRole === 'kitchen' ? String(payload?.customerId || '') : me.id;
+    if (!customerId) return ack({ ok: false, error: 'غير صالح' });
+    const thread = getOrCreateThread(customerId, myRole === 'customer' ? me.name : (chatThreads.get(customerId)?.customerName || ''));
+    ack({ ok: true, messages: thread.messages });
+  });
+
+  socket.on('chat:threads', (_payload, ack) => {
+    if (typeof ack !== 'function' || myRole !== 'kitchen') return;
+    ack([...chatThreads.values()].map(threadSummary).sort((a, b) => b.updatedAt - a.updatedAt));
+  });
+
+  socket.on('chat:read', (payload, ack) => {
+    const customerId = myRole === 'kitchen' ? String(payload?.customerId || '') : me.id;
+    const thread = chatThreads.get(customerId);
+    if (thread) {
+      if (myRole === 'kitchen') thread.unreadForAdmin = 0;
+      else thread.unreadForCustomer = 0;
+      io.to('kitchen').emit('chat:threads', [...chatThreads.values()].map(threadSummary).sort((a, b) => b.updatedAt - a.updatedAt));
+    }
+    if (typeof ack === 'function') ack({ ok: true });
   });
 });
 
