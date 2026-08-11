@@ -66,6 +66,9 @@
       });
     }
 
+    // فتح المحادثة تلقائياً لو وصلنا من رابط خارجي مثل /menu.html#chat
+    if (location.hash === '#chat') chatIconBtn.click();
+
     socket.on('chat:message', ({ message }) => {
       if (chatOverlay.classList.contains('open')) {
         refreshHistory();
