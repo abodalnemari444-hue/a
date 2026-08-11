@@ -460,6 +460,7 @@ img, svg { max-width: 100%; display: block; }
   margin: 0 16px 12px;
   box-shadow: var(--shadow-sm);
 }
+.sheet .order-card { margin: 0 0 12px; }
 .order-card .head {
   display: flex;
   justify-content: space-between;
