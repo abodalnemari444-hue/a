@@ -48,18 +48,40 @@ app.use(sessionMiddleware);
 // ---------------------------------------------------------------------------
 
 const menu = [
+  // مقبلات
   { id: 'm1', category: 'مقبلات', name: 'حمص بالطحينة', desc: 'حمص كريمي مع زيت زيتون وصنوبر', price: 14, emoji: '🥙', available: true },
   { id: 'm2', category: 'مقبلات', name: 'سلطة فتوش', desc: 'خضار طازجة مع خبز مقرمش ودبس الرمان', price: 16, emoji: '🥗', available: true },
   { id: 'm3', category: 'مقبلات', name: 'كبة مقلية', desc: '٦ قطع كبة محشوة باللحم والصنوبر', price: 22, emoji: '🍢', available: true },
+  { id: 'm13', category: 'مقبلات', name: 'متبل باذنجان', desc: 'باذنجان مشوي مهروس مع الطحينة والرمان', price: 15, emoji: '🍆', available: true },
+  { id: 'm14', category: 'مقبلات', name: 'ورق عنب', desc: 'ورق عنب محشي أرز وخضار بزيت الزيتون', price: 18, emoji: '🍃', available: true },
+  { id: 'm15', category: 'مقبلات', name: 'سمبوسة لحم', desc: '٥ قطع سمبوسة مقرمشة محشوة لحم مفروم', price: 17, emoji: '🥟', available: true },
+  { id: 'm16', category: 'مقبلات', name: 'جبنة حلوم مشوية', desc: 'حلوم مشوي مع طماطم كرزية ونعناع', price: 19, emoji: '🧀', available: true },
+
+  // أطباق رئيسية
   { id: 'm4', category: 'أطباق رئيسية', name: 'مشاوي مشكلة', desc: 'تشكيلة من الكباب والريش والدجاج', price: 65, emoji: '🍖', available: true },
   { id: 'm5', category: 'أطباق رئيسية', name: 'برياني دجاج', desc: 'أرز برياني مع دجاج متبل وبهارات خاصة', price: 42, emoji: '🍛', available: true },
   { id: 'm6', category: 'أطباق رئيسية', name: 'باستا ألفريدو', desc: 'باستا بصوص الكريمة والفطر', price: 38, emoji: '🍝', available: true },
   { id: 'm7', category: 'أطباق رئيسية', name: 'برجر لحم مشوي', desc: 'برجر لحم مع جبن شيدر وبطاطس مقلية', price: 34, emoji: '🍔', available: true },
+  { id: 'm17', category: 'أطباق رئيسية', name: 'مندي دجاج', desc: 'دجاج مدخن على أرز مندي بالبهارات اليمنية', price: 45, emoji: '🍗', available: true },
+  { id: 'm18', category: 'أطباق رئيسية', name: 'كبسة لحم', desc: 'أرز كبسة مع قطع لحم ضاني طرية', price: 48, emoji: '🍚', available: true },
+  { id: 'm19', category: 'أطباق رئيسية', name: 'سمك مشوي', desc: 'سمك هامور مشوي مع أرز وصلصة ليمون', price: 55, emoji: '🐟', available: true },
+  { id: 'm20', category: 'أطباق رئيسية', name: 'بيتزا خضار', desc: 'عجينة رقيقة مع خضار مشكلة وجبن موزاريلا', price: 32, emoji: '🍕', available: true },
+  { id: 'm21', category: 'أطباق رئيسية', name: 'شاورما دجاج', desc: 'شاورما دجاج بالخبز العربي مع صلصة ثوم', price: 25, emoji: '🌯', available: true },
+
+  // مشروبات
   { id: 'm8', category: 'مشروبات', name: 'عصير برتقال طازج', desc: 'عصير طبيعي ١٠٠٪', price: 12, emoji: '🍊', available: true },
   { id: 'm9', category: 'مشروبات', name: 'ليموناضة بالنعناع', desc: 'مثلجة ومنعشة', price: 13, emoji: '🍋', available: true },
   { id: 'm10', category: 'مشروبات', name: 'قهوة عربية', desc: 'تقدم مع تمر', price: 10, emoji: '☕', available: true },
+  { id: 'm22', category: 'مشروبات', name: 'شاي كرك', desc: 'شاي بالحليب والهيل والزعفران', price: 9, emoji: '🍵', available: true },
+  { id: 'm23', category: 'مشروبات', name: 'موهيتو فراولة', desc: 'مشروب منعش بالفراولة والنعناع', price: 15, emoji: '🍓', available: true },
+  { id: 'm24', category: 'مشروبات', name: 'ميلك شيك شوكولاتة', desc: 'مخفوق حليب بالشوكولاتة والكريمة', price: 16, emoji: '🥤', available: true },
+
+  // حلويات
   { id: 'm11', category: 'حلويات', name: 'كنافة نابلسية', desc: 'كنافة بالجبن مع القطر', price: 24, emoji: '🍮', available: true },
   { id: 'm12', category: 'حلويات', name: 'أم علي', desc: 'حلا ساخن بالمكسرات والقشطة', price: 20, emoji: '🍰', available: true },
+  { id: 'm25', category: 'حلويات', name: 'بسبوسة', desc: 'حلا السميد المغطى بجوز الهند والقطر', price: 16, emoji: '🧁', available: true },
+  { id: 'm26', category: 'حلويات', name: 'لقيمات', desc: 'كرات عجين مقرمشة مغطاة بالعسل والسمسم', price: 18, emoji: '🍯', available: true },
+  { id: 'm27', category: 'حلويات', name: 'تشيز كيك فراولة', desc: 'تشيز كيك كريمي بصوص الفراولة', price: 22, emoji: '🍓', available: true },
 ];
 
 /** @type {Map<string, any>} phone -> user */
