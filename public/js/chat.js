@@ -48,16 +48,23 @@
       chatBadge.style.display = 'none';
     });
 
-    function sendCustomerMessage() {
-      const text = chatInput.value.trim();
+    function sendCustomerMessage(overrideText) {
+      const text = (overrideText ?? chatInput.value).trim();
       if (!text) return;
       chatInput.value = '';
       socket.emit('chat:send', { text }, (res) => {
         if (!res.ok) showToast('تعذر إرسال الرسالة: ' + res.error);
       });
     }
-    chatSendBtn.addEventListener('click', sendCustomerMessage);
+    chatSendBtn.addEventListener('click', () => sendCustomerMessage());
     chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendCustomerMessage(); });
+
+    const chatQuickOptions = document.getElementById('chatQuickOptions');
+    if (chatQuickOptions) {
+      chatQuickOptions.querySelectorAll('.chat-quick-btn').forEach((btn) => {
+        btn.addEventListener('click', () => sendCustomerMessage(btn.dataset.msg));
+      });
+    }
 
     socket.on('chat:message', ({ message }) => {
       if (chatOverlay.classList.contains('open')) {

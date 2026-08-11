@@ -1035,6 +1035,29 @@ body.chat-embedded .chat-sheet {
   margin-top: 4px;
 }
 
+.chat-quick-options {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  scrollbar-width: none;
+}
+.chat-quick-options::-webkit-scrollbar { display: none; }
+.chat-quick-btn {
+  flex: 0 0 auto;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 8px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chat-quick-btn:active { transform: scale(0.96); background: var(--color-primary-light); }
+
 .chat-input-row {
   display: flex;
   gap: 8px;
