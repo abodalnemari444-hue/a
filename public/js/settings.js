@@ -7,6 +7,7 @@
   const adminSectionTitle = document.getElementById('adminSectionTitle');
   const adminSwitchSection = document.getElementById('adminSwitchSection');
   const switchToKitchenBtn = document.getElementById('switchToKitchenBtn');
+  const switchToCustomerBtn = document.getElementById('switchToCustomerBtn');
   const switchToSupportBtn = document.getElementById('switchToSupportBtn');
 
   let me = null;
@@ -20,16 +21,17 @@
     return me;
   }).catch(() => null);
 
-  async function switchAdminView(destination) {
+  async function switchAdminView(viewRole, destination) {
     await fetch('/api/auth/set-view', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'kitchen' }),
+      body: JSON.stringify({ role: viewRole }),
     });
     window.location.href = destination;
   }
-  switchToKitchenBtn.addEventListener('click', () => switchAdminView('/kitchen.html'));
-  switchToSupportBtn.addEventListener('click', () => switchAdminView('/support.html'));
+  switchToKitchenBtn.addEventListener('click', () => switchAdminView('kitchen', '/kitchen.html'));
+  switchToCustomerBtn.addEventListener('click', () => switchAdminView('customer', '/menu.html'));
+  switchToSupportBtn.addEventListener('click', () => switchAdminView('kitchen', '/support.html'));
 
   supportLink.addEventListener('click', async (e) => {
     e.preventDefault();
