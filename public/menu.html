@@ -21,6 +21,10 @@
     </div>
     <div style="display:flex; align-items:center; gap:10px;">
       <span class="conn-dot" title="حالة الاتصال"></span>
+      <button class="icon-btn" id="chatIconBtn" title="خدمة العملاء">
+        🎧
+        <span class="badge-count" id="chatBadge" style="display:none;">0</span>
+      </button>
     </div>
   </header>
 
@@ -114,11 +118,6 @@
       <span>الحساب</span>
     </a>
   </nav>
-
-  <!-- زر مخفي: يُستخدم داخلياً (chat.js) لفتح المحادثة عند الوصول عبر /menu.html#chat من أيقونة السماعة بالإعدادات -->
-  <button id="chatIconBtn" style="display:none;">
-    <span class="badge-count" id="chatBadge" style="display:none;">0</span>
-  </button>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/common.js"></script>
