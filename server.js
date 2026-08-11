@@ -376,6 +376,10 @@ app.get('/settings.html', requireAuth(), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'settings.html'));
 });
 
+app.get('/support.html', requireAuth('kitchen'), (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'support.html'));
+});
+
 app.get('/profile.html', requireAuth(), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'profile.html'));
 });

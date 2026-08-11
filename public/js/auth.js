@@ -23,6 +23,7 @@
     viewChoice: document.getElementById('viewChoice'),
     choiceKitchen: document.getElementById('choiceKitchen'),
     choiceCustomer: document.getElementById('choiceCustomer'),
+    choiceSupport: document.getElementById('choiceSupport'),
   };
 
   function showViewChoice() {
@@ -31,7 +32,7 @@
     el.viewChoice.style.display = 'block';
   }
 
-  async function chooseView(role) {
+  async function chooseView(role, destination) {
     try {
       const res = await fetch('/api/auth/set-view', {
         method: 'POST',
@@ -41,14 +42,15 @@
       const data = await res.json();
       if (!data.ok) { showError(data.error || 'حدث خطأ'); return; }
       sessionStorage.setItem('shami_show_welcome', '1');
-      window.location.href = role === 'kitchen' ? '/kitchen.html' : '/menu.html';
+      window.location.href = destination;
     } catch (err) {
       showError('تعذر الاتصال بالسيرفر');
     }
   }
 
-  el.choiceKitchen.addEventListener('click', () => chooseView('kitchen'));
-  el.choiceCustomer.addEventListener('click', () => chooseView('customer'));
+  el.choiceKitchen.addEventListener('click', () => chooseView('kitchen', '/kitchen.html'));
+  el.choiceCustomer.addEventListener('click', () => chooseView('customer', '/menu.html'));
+  el.choiceSupport.addEventListener('click', () => chooseView('kitchen', '/support.html'));
 
   el.togglePassword.addEventListener('click', () => {
     const hidden = el.fPassword.type === 'password';
