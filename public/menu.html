@@ -44,9 +44,6 @@
       <h2 data-i18n="cart_title">سلتك</h2>
       <div id="cartItemsList"></div>
 
-      <div class="section-title" id="myOrdersTitle" style="display:none; padding-inline:0;" data-i18n="my_orders_title">طلباتي</div>
-      <div id="myOrders"></div>
-
       <div class="field" style="margin-top:14px;">
         <label data-i18n="label_table">رقم الطاولة</label>
         <input type="text" id="tableNumber" placeholder="مثال: 5" maxlength="10" required />
@@ -63,6 +60,16 @@
 
       <button class="btn btn-primary btn-block" id="submitOrderBtn" data-i18n="btn_submit_order">إرسال الطلب للمطبخ</button>
       <button class="btn btn-outline btn-block" style="margin-top:8px;" id="closeCartBtn" data-i18n="btn_close">إغلاق</button>
+    </div>
+  </div>
+
+  <!-- طلباتي -->
+  <div class="overlay" id="myOrdersOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 data-i18n="my_orders_title">طلباتي</h2>
+      <div id="myOrders"></div>
+      <button class="btn btn-outline btn-block" style="margin-top:8px;" id="closeMyOrdersBtn" data-i18n="btn_close">إغلاق</button>
     </div>
   </div>
 
@@ -89,6 +96,10 @@
       <span class="n-icon">🛒</span>
       <span>السلة</span>
       <span class="badge-count" id="cartCount" style="display:none;">0</span>
+    </button>
+    <button class="bottom-nav-item" id="myOrdersIconBtn">
+      <span class="n-icon">📋</span>
+      <span data-i18n="my_orders_title">طلباتي</span>
     </button>
     <button class="bottom-nav-item" id="chatIconBtn">
       <span class="n-icon">💬</span>

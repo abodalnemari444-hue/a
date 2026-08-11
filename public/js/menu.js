@@ -21,8 +21,10 @@
     submitOrderBtn: document.getElementById('submitOrderBtn'),
     closeCartBtn: document.getElementById('closeCartBtn'),
     cartIconBtn: document.getElementById('cartIconBtn'),
-    myOrdersTitle: document.getElementById('myOrdersTitle'),
     myOrders: document.getElementById('myOrders'),
+    myOrdersOverlay: document.getElementById('myOrdersOverlay'),
+    myOrdersIconBtn: document.getElementById('myOrdersIconBtn'),
+    closeMyOrdersBtn: document.getElementById('closeMyOrdersBtn'),
     tableNumber: document.getElementById('tableNumber'),
     orderNotes: document.getElementById('orderNotes'),
     userNameBadge: document.getElementById('userNameBadge'),
@@ -32,6 +34,17 @@
   el.homeTabBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  function openMyOrders() {
+    renderMyOrders();
+    el.myOrdersOverlay.classList.add('open');
+  }
+  function closeMyOrders() {
+    el.myOrdersOverlay.classList.remove('open');
+  }
+  el.myOrdersIconBtn.addEventListener('click', openMyOrders);
+  el.closeMyOrdersBtn.addEventListener('click', closeMyOrders);
+  el.myOrdersOverlay.addEventListener('click', (e) => { if (e.target === el.myOrdersOverlay) closeMyOrders(); });
 
   async function loadMe() {
     const res = await fetch('/api/auth/me');
@@ -227,7 +240,10 @@
   function renderMyOrders() {
     const list = [...state.myOrders.values()].sort((a, b) => b.createdAt - a.createdAt);
 
-    el.myOrdersTitle.style.display = list.length ? 'block' : 'none';
+    if (list.length === 0) {
+      el.myOrders.innerHTML = `<p style="color:var(--color-text-muted); font-size:13px; padding:0 16px;">ما عندك أي طلبات بعد.</p>`;
+      return;
+    }
     el.myOrders.innerHTML = list.map((order) => {
       const idx = progressIndex(order.status);
       const segs = STATUS_ORDER.map((_, i) => `<div class="seg ${idx >= 0 && i <= idx ? 'done' : ''}"></div>`).join('');
