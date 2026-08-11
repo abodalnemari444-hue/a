@@ -4,16 +4,37 @@
   const backBtn = document.getElementById('backBtn');
   const langSelect = document.getElementById('langSelect');
   const supportLink = document.getElementById('supportLink');
+  const adminSectionTitle = document.getElementById('adminSectionTitle');
+  const adminSwitchSection = document.getElementById('adminSwitchSection');
+  const switchToKitchenBtn = document.getElementById('switchToKitchenBtn');
+  const switchToSupportBtn = document.getElementById('switchToSupportBtn');
+
+  let me = null;
+  const meLoaded = fetch('/api/auth/me').then((r) => r.json()).then((data) => {
+    me = data.ok ? data.user : null;
+    if (me && me.role === 'kitchen') {
+      adminSectionTitle.style.display = 'block';
+      adminSwitchSection.style.display = 'flex';
+      adminSwitchSection.style.flexDirection = 'column';
+    }
+    return me;
+  }).catch(() => null);
+
+  async function switchAdminView(destination) {
+    await fetch('/api/auth/set-view', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'kitchen' }),
+    });
+    window.location.href = destination;
+  }
+  switchToKitchenBtn.addEventListener('click', () => switchAdminView('/kitchen.html'));
+  switchToSupportBtn.addEventListener('click', () => switchAdminView('/support.html'));
 
   supportLink.addEventListener('click', async (e) => {
     e.preventDefault();
-    try {
-      const res = await fetch('/api/auth/me');
-      const data = await res.json();
-      window.location.href = data.ok && data.user.role === 'kitchen' ? '/support.html' : '/menu.html#chat';
-    } catch (err) {
-      window.location.href = '/menu.html#chat';
-    }
+    await meLoaded;
+    window.location.href = me && me.role === 'kitchen' ? '/support.html' : '/menu.html#chat';
   });
 
   if (window.ShamiI18n) {
@@ -46,13 +67,9 @@
   });
 
   backBtn.addEventListener('click', async () => {
-    try {
-      const res = await fetch('/api/auth/me');
-      const data = await res.json();
-      window.location.href = data.ok && data.user.role === 'kitchen' ? '/kitchen.html' : '/menu.html';
-    } catch (err) {
-      window.location.href = '/menu.html';
-    }
+    await meLoaded;
+    const active = me ? (me.activeRole || me.role) : 'customer';
+    window.location.href = active === 'kitchen' ? '/kitchen.html' : '/menu.html';
   });
 
   const logoutRow = document.getElementById('logoutRow');
