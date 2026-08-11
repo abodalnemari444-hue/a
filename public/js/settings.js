@@ -5,9 +5,16 @@
   const langSelect = document.getElementById('langSelect');
   const supportLink = document.getElementById('supportLink');
 
-  fetch('/api/auth/me').then((r) => r.json()).then((data) => {
-    if (data.ok) supportLink.href = data.user.role === 'kitchen' ? '/support.html' : '/menu.html#chat';
-  }).catch(() => {});
+  supportLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      window.location.href = data.ok && data.user.role === 'kitchen' ? '/support.html' : '/menu.html#chat';
+    } catch (err) {
+      window.location.href = '/menu.html#chat';
+    }
+  });
 
   if (window.ShamiI18n) {
     const { LANGUAGES, currentLang, applyLanguage } = window.ShamiI18n;
