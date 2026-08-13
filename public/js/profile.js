@@ -28,4 +28,60 @@
   });
 
   loadProfile();
+
+  document.querySelectorAll('.toggle-password[data-target]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      const hidden = input.type === 'password';
+      input.type = hidden ? 'text' : 'password';
+      btn.textContent = hidden ? '🙈' : '👁️';
+    });
+  });
+
+  const changePasswordForm = document.getElementById('changePasswordForm');
+  const currentPassword = document.getElementById('currentPassword');
+  const newPassword = document.getElementById('newPassword');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const passwordError = document.getElementById('passwordError');
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+
+  function showPasswordError(msg) {
+    passwordError.textContent = msg;
+    passwordError.style.display = 'block';
+  }
+
+  changePasswordForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    passwordError.style.display = 'none';
+
+    if (newPassword.value !== confirmPassword.value) {
+      showPasswordError('كلمة المرور الجديدة وتأكيدها غير متطابقين');
+      return;
+    }
+
+    changePasswordBtn.disabled = true;
+    changePasswordBtn.textContent = 'جاري التحديث...';
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: currentPassword.value,
+          newPassword: newPassword.value,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showPasswordError(data.error || 'تعذر تحديث كلمة المرور');
+        return;
+      }
+      changePasswordForm.reset();
+      showToast('تم تحديث كلمة المرور ✅');
+    } catch (err) {
+      showPasswordError('تعذر الاتصال بالسيرفر');
+    } finally {
+      changePasswordBtn.disabled = false;
+      changePasswordBtn.textContent = 'تحديث كلمة المرور';
+    }
+  });
 })();

@@ -364,6 +364,30 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ ok: true, user: req.session.user });
 });
 
+app.post('/api/auth/change-password', (req, res) => {
+  const session = req.session.user;
+  if (!session) return res.status(401).json({ ok: false, error: 'غير مسجّل دخول' });
+
+  const currentPassword = String(req.body.currentPassword || '');
+  const newPassword = String(req.body.newPassword || '');
+
+  const user = users.get(session.phone);
+  if (!user) return res.status(401).json({ ok: false, error: 'غير مسجّل دخول' });
+  if (!verifyPassword(currentPassword, user.salt, user.passwordHash)) {
+    return res.status(400).json({ ok: false, error: 'كلمة المرور الحالية غير صحيحة' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ ok: false, error: 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل' });
+  }
+
+  const salt = crypto.randomBytes(16).toString('hex');
+  user.salt = salt;
+  user.passwordHash = hashPassword(newPassword, salt);
+  persistUsers();
+
+  res.json({ ok: true });
+});
+
 // ---------------------------------------------------------------------------
 // حماية الصفحات: لازم تسجيل دخول، وكل دور يروح لصفحته فقط
 // ---------------------------------------------------------------------------

@@ -45,6 +45,35 @@
         </div>
       </div>
     </div>
+
+    <div class="section-title">تغيير كلمة المرور</div>
+    <form class="auth-card" id="changePasswordForm" style="margin:0 16px; width:auto;">
+      <div class="field">
+        <label>كلمة المرور الحالية</label>
+        <div class="password-wrap">
+          <input type="password" id="currentPassword" placeholder="••••••" autocomplete="current-password" required />
+          <button type="button" class="toggle-password" data-target="currentPassword" aria-label="إظهار كلمة المرور">👁️</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>كلمة المرور الجديدة</label>
+        <div class="password-wrap">
+          <input type="password" id="newPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
+          <button type="button" class="toggle-password" data-target="newPassword" aria-label="إظهار كلمة المرور">👁️</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>تأكيد كلمة المرور الجديدة</label>
+        <div class="password-wrap">
+          <input type="password" id="confirmPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
+          <button type="button" class="toggle-password" data-target="confirmPassword" aria-label="إظهار كلمة المرور">👁️</button>
+        </div>
+      </div>
+
+      <div class="error-box" id="passwordError" style="display:none;"></div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="changePasswordBtn">تحديث كلمة المرور</button>
+    </form>
   </main>
 
   <script src="/js/common.js"></script>
