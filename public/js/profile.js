@@ -38,12 +38,27 @@
     });
   });
 
+  const changePasswordRow = document.getElementById('changePasswordRow');
+  const changePasswordOverlay = document.getElementById('changePasswordOverlay');
+  const closeChangePasswordBtn = document.getElementById('closeChangePasswordBtn');
   const changePasswordForm = document.getElementById('changePasswordForm');
   const currentPassword = document.getElementById('currentPassword');
   const newPassword = document.getElementById('newPassword');
   const confirmPassword = document.getElementById('confirmPassword');
   const passwordError = document.getElementById('passwordError');
   const changePasswordBtn = document.getElementById('changePasswordBtn');
+
+  function openChangePassword() {
+    changePasswordForm.reset();
+    passwordError.style.display = 'none';
+    changePasswordOverlay.classList.add('open');
+  }
+  function closeChangePassword() {
+    changePasswordOverlay.classList.remove('open');
+  }
+  changePasswordRow.addEventListener('click', openChangePassword);
+  closeChangePasswordBtn.addEventListener('click', closeChangePassword);
+  changePasswordOverlay.addEventListener('click', (e) => { if (e.target === changePasswordOverlay) closeChangePassword(); });
 
   function showPasswordError(msg) {
     passwordError.textContent = msg;
@@ -76,6 +91,7 @@
         return;
       }
       changePasswordForm.reset();
+      closeChangePassword();
       showToast('تم تحديث كلمة المرور ✅');
     } catch (err) {
       showPasswordError('تعذر الاتصال بالسيرفر');

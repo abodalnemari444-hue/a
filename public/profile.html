@@ -46,35 +46,53 @@
       </div>
     </div>
 
-    <div class="section-title">تغيير كلمة المرور</div>
-    <form class="auth-card" id="changePasswordForm" style="margin:0 16px; width:auto;">
-      <div class="field">
-        <label>كلمة المرور الحالية</label>
-        <div class="password-wrap">
-          <input type="password" id="currentPassword" placeholder="••••••" autocomplete="current-password" required />
-          <button type="button" class="toggle-password" data-target="currentPassword" aria-label="إظهار كلمة المرور">👁️</button>
+    <div class="section-title">الأمان</div>
+    <div class="settings-list">
+      <button type="button" class="settings-row" id="changePasswordRow" style="cursor:pointer; border:none; width:100%; text-align:right; font-family:inherit;">
+        <div class="s-icon">🔒</div>
+        <div class="s-text">
+          <h3>تغيير كلمة المرور</h3>
+          <p>تحديث كلمة مرور حسابك</p>
         </div>
-      </div>
-      <div class="field">
-        <label>كلمة المرور الجديدة</label>
-        <div class="password-wrap">
-          <input type="password" id="newPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
-          <button type="button" class="toggle-password" data-target="newPassword" aria-label="إظهار كلمة المرور">👁️</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>تأكيد كلمة المرور الجديدة</label>
-        <div class="password-wrap">
-          <input type="password" id="confirmPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
-          <button type="button" class="toggle-password" data-target="confirmPassword" aria-label="إظهار كلمة المرور">👁️</button>
-        </div>
-      </div>
-
-      <div class="error-box" id="passwordError" style="display:none;"></div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="changePasswordBtn">تحديث كلمة المرور</button>
-    </form>
+      </button>
+    </div>
   </main>
+
+  <!-- تغيير كلمة المرور -->
+  <div class="overlay" id="changePasswordOverlay">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2>🔒 تغيير كلمة المرور</h2>
+      <form id="changePasswordForm">
+        <div class="field">
+          <label>كلمة المرور الحالية</label>
+          <div class="password-wrap">
+            <input type="password" id="currentPassword" placeholder="••••••" autocomplete="current-password" required />
+            <button type="button" class="toggle-password" data-target="currentPassword" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>كلمة المرور الجديدة</label>
+          <div class="password-wrap">
+            <input type="password" id="newPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
+            <button type="button" class="toggle-password" data-target="newPassword" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>تأكيد كلمة المرور الجديدة</label>
+          <div class="password-wrap">
+            <input type="password" id="confirmPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
+            <button type="button" class="toggle-password" data-target="confirmPassword" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+
+        <div class="error-box" id="passwordError" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="changePasswordBtn">تحديث كلمة المرور</button>
+        <button type="button" class="btn btn-outline btn-block" style="margin-top:8px;" id="closeChangePasswordBtn">إغلاق</button>
+      </form>
+    </div>
+  </div>
 
   <script src="/js/common.js"></script>
   <script src="/js/profile.js"></script>
