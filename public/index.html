@@ -47,6 +47,48 @@
         <div class="error-box" id="authError" style="display:none;"></div>
 
         <button type="submit" class="btn btn-primary btn-block" id="authSubmit">دخول</button>
+        <button type="button" class="link-btn" id="forgotPasswordBtn" style="display:none;">نسيت كلمة المرور؟</button>
+      </form>
+
+      <form id="forgotPhoneForm" style="display:none;">
+        <p class="verify-hint">أدخل رقم جوالك المسجّل وبنرسل لك رمز لإعادة تعيين كلمة المرور.</p>
+        <div class="field">
+          <label>رقم الجوال</label>
+          <input type="tel" id="forgotPhone" placeholder="05xxxxxxxx" autocomplete="tel" required />
+        </div>
+
+        <div class="error-box" id="forgotError" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="forgotSubmit">إرسال رمز إعادة التعيين</button>
+        <button type="button" class="btn btn-outline btn-block" style="margin-top:8px;" id="forgotBackBtn">رجوع</button>
+      </form>
+
+      <form id="resetPasswordForm" style="display:none;">
+        <p class="verify-hint">أرسلنا رمز تحقق مكوّن من 6 أرقام إلى جوالك <strong id="resetPhoneLabel"></strong>، أدخله مع كلمة المرور الجديدة.</p>
+        <div class="field">
+          <label>رمز التحقق</label>
+          <input type="text" id="resetCode" class="code-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="000000" autocomplete="one-time-code" required />
+        </div>
+        <div class="field">
+          <label>كلمة المرور الجديدة</label>
+          <div class="password-wrap">
+            <input type="password" id="resetNewPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
+            <button type="button" class="toggle-password" data-target="resetNewPassword" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>تأكيد كلمة المرور الجديدة</label>
+          <div class="password-wrap">
+            <input type="password" id="resetConfirmPassword" placeholder="••••••" minlength="6" autocomplete="new-password" required />
+            <button type="button" class="toggle-password" data-target="resetConfirmPassword" aria-label="إظهار كلمة المرور">👁️</button>
+          </div>
+        </div>
+
+        <div class="error-box" id="resetError" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="resetSubmit">تحديث كلمة المرور والدخول</button>
+        <button type="button" class="link-btn" id="resetResendBtn">لم يصلني الرمز؟ إعادة الإرسال</button>
+        <button type="button" class="btn btn-outline btn-block" style="margin-top:8px;" id="resetBackBtn">رجوع</button>
       </form>
 
       <form id="verifyForm" style="display:none;">

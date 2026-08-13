@@ -124,6 +124,8 @@ const KITCHEN_ADMIN_PHONES = ['0546547973'];
 
 /** @type {Map<string, any>} phone -> pending registration awaiting SMS verification */
 const pendingRegistrations = new Map();
+/** @type {Map<string, any>} phone -> { code, codeExpires, lastSentAt } لإعادة تعيين كلمة المرور */
+const passwordResets = new Map();
 const CODE_TTL_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 45 * 1000;
 
@@ -342,6 +344,85 @@ app.post('/api/auth/login', (req, res) => {
   const activeRole = canChooseView ? (req.session.user?.activeRole || 'kitchen') : user.role;
   req.session.user = publicUser(user, activeRole);
   res.json({ ok: true, user: publicUser(user, activeRole), canChooseView });
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const phone = String(req.body.phone || '').trim();
+  if (!users.has(phone)) {
+    return res.status(404).json({ ok: false, error: 'لا يوجد حساب مسجّل بهذا الرقم' });
+  }
+
+  const code = generateCode();
+  passwordResets.set(phone, {
+    code,
+    codeExpires: Date.now() + CODE_TTL_MS,
+    lastSentAt: Date.now(),
+  });
+
+  let smsFailed = false;
+  try {
+    await sendVerificationSms(phone, code);
+  } catch (err) {
+    console.error('[reset] فشل إرسال الرسالة النصية، سيتم عرض الرمز مباشرة كبديل:', err.message);
+    smsFailed = true;
+  }
+
+  res.json({
+    ok: true,
+    phone,
+    ...(smsFailed ? { smsFailed: true, devCode: code } : {}),
+  });
+});
+
+app.post('/api/auth/forgot-password/resend', async (req, res) => {
+  const phone = String(req.body.phone || '').trim();
+  const pending = passwordResets.get(phone);
+  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد طلب إعادة تعيين بانتظار التحقق لهذا الرقم' });
+
+  const sinceLast = Date.now() - pending.lastSentAt;
+  if (sinceLast < RESEND_COOLDOWN_MS) {
+    return res.status(429).json({ ok: false, error: 'انتظر قليلاً قبل طلب رمز جديد', retryAfterMs: RESEND_COOLDOWN_MS - sinceLast });
+  }
+
+  pending.code = generateCode();
+  pending.codeExpires = Date.now() + CODE_TTL_MS;
+  pending.lastSentAt = Date.now();
+
+  let smsFailed = false;
+  try {
+    await sendVerificationSms(phone, pending.code);
+  } catch (err) {
+    console.error('[reset] فشل إرسال الرسالة النصية، سيتم عرض الرمز مباشرة كبديل:', err.message);
+    smsFailed = true;
+  }
+
+  res.json({ ok: true, ...(smsFailed ? { smsFailed: true, devCode: pending.code } : {}) });
+});
+
+app.post('/api/auth/reset-password', (req, res) => {
+  const phone = String(req.body.phone || '').trim();
+  const code = String(req.body.code || '').trim();
+  const newPassword = String(req.body.newPassword || '');
+
+  const pending = passwordResets.get(phone);
+  if (!pending) return res.status(400).json({ ok: false, error: 'لا يوجد طلب إعادة تعيين بانتظار التحقق لهذا الرقم' });
+  if (Date.now() > pending.codeExpires) {
+    passwordResets.delete(phone);
+    return res.status(400).json({ ok: false, error: 'انتهت صلاحية الرمز، اطلب رمزاً جديداً' });
+  }
+  if (code !== pending.code) return res.status(400).json({ ok: false, error: 'رمز التحقق غير صحيح' });
+  if (newPassword.length < 6) return res.status(400).json({ ok: false, error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
+
+  const user = users.get(phone);
+  if (!user) return res.status(404).json({ ok: false, error: 'الحساب غير موجود' });
+
+  const salt = crypto.randomBytes(16).toString('hex');
+  user.salt = salt;
+  user.passwordHash = hashPassword(newPassword, salt);
+  persistUsers();
+  passwordResets.delete(phone);
+
+  res.json({ ok: true });
 });
 
 app.post('/api/auth/set-view', (req, res) => {
