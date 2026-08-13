@@ -164,6 +164,33 @@ async function sendVerificationSms(toPhone, code) {
 const orders = new Map();
 let orderCounter = 1000;
 
+// حفظ الطلبات على القرص حتى تبقى محفوظة (بما فيها المكتملة) عند إعادة تشغيل السيرفر
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+
+function loadOrders() {
+  try {
+    const raw = fs.readFileSync(ORDERS_FILE, 'utf8');
+    const list = JSON.parse(raw);
+    list.forEach((o) => orders.set(o.id, o));
+    const maxId = list.reduce((max, o) => Math.max(max, parseInt(String(o.id).replace('ORD-', ''), 10) || 0), 1000);
+    orderCounter = maxId;
+    console.log(`[orders] تم تحميل ${list.length} طلب محفوظ`);
+  } catch (err) {
+    // لا يوجد ملف بعد (أول تشغيل) - نبدأ بقائمة فارغة
+  }
+}
+
+function persistOrders() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(ORDERS_FILE, JSON.stringify([...orders.values()], null, 2), 'utf8');
+  } catch (err) {
+    console.error('[orders] فشل حفظ بيانات الطلبات:', err.message);
+  }
+}
+
+loadOrders();
+
 // ---------------------------------------------------------------------------
 // محادثة خدمة العملاء بين الزبون والمشرف (في الذاكرة فقط، مثل الطلبات)
 // ---------------------------------------------------------------------------
@@ -574,6 +601,7 @@ io.on('connection', (socket) => {
       };
 
       orders.set(order.id, order);
+      persistOrders();
       broadcastOrder(serializeOrder(order));
       if (typeof ack === 'function') ack({ ok: true, order: serializeOrder(order) });
     } catch (err) {
@@ -591,6 +619,7 @@ io.on('connection', (socket) => {
 
       order.status = status;
       order.updatedAt = Date.now();
+      persistOrders();
       broadcastOrder(serializeOrder(order));
       if (typeof ack === 'function') ack({ ok: true });
     } catch (err) {

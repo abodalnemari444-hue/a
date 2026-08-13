@@ -38,6 +38,7 @@
   function openMyOrders() {
     renderMyOrders();
     el.myOrdersOverlay.classList.add('open');
+    loadMyOrdersFromServer();
   }
   function closeMyOrders() {
     el.myOrdersOverlay.classList.remove('open');
