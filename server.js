@@ -230,7 +230,7 @@ function verifyPassword(password, salt, expectedHash) {
 // Auth API
 // ---------------------------------------------------------------------------
 
-function isValidPhone(v) { return /^\+?\d{7,15}$/.test(String(v || '').trim()); }
+function isValidPhone(v) { return /^05\d{8}$/.test(String(v || '').trim()); }
 
 app.post('/api/auth/register', async (req, res) => {
   const password = String(req.body.password || '');
@@ -239,7 +239,7 @@ app.post('/api/auth/register', async (req, res) => {
   const role = req.body.role;
 
   if (!name) return res.status(400).json({ ok: false, error: 'الاسم مطلوب' });
-  if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'رقم جوال غير صالح' });
+  if (!isValidPhone(phone)) return res.status(400).json({ ok: false, error: 'رقم الجوال يجب أن يبدأ بـ 05 ويتكوّن من 10 أرقام' });
   if (password.length < 6) return res.status(400).json({ ok: false, error: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' });
   if (!['customer', 'kitchen'].includes(role)) return res.status(400).json({ ok: false, error: 'نوع حساب غير صالح' });
   if (role === 'kitchen' && !KITCHEN_ADMIN_PHONES.includes(phone)) {

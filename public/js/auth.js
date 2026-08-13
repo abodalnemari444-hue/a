@@ -94,6 +94,9 @@
     const isRegister = state.mode === 'register';
     el.nameField.style.display = isRegister ? 'block' : 'none';
     el.fName.required = isRegister;
+    // نفرض شكل 05xxxxxxxx عند إنشاء حساب جديد فقط، حتى لا نمنع حسابات قديمة من تسجيل الدخول
+    if (isRegister) el.fPhone.setAttribute('pattern', '05[0-9]{8}');
+    else el.fPhone.removeAttribute('pattern');
     const dict = t();
     el.submit.textContent = dict ? (isRegister ? dict.btn_create_account : dict.btn_login) : (isRegister ? 'إنشاء الحساب' : 'دخول');
     el.error.style.display = 'none';

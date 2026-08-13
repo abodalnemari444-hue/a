@@ -34,7 +34,7 @@
         </div>
         <div class="field">
           <label data-i18n="label_phone">رقم الجوال</label>
-          <input type="tel" id="fPhone" placeholder="05xxxxxxxx" autocomplete="tel" required />
+          <input type="tel" id="fPhone" placeholder="05xxxxxxxx" pattern="05[0-9]{8}" maxlength="10" inputmode="numeric" autocomplete="tel" required />
         </div>
         <div class="field">
           <label data-i18n="label_password">كلمة المرور</label>
@@ -54,7 +54,7 @@
         <p class="verify-hint">أدخل رقم جوالك المسجّل وبنرسل لك رمز لإعادة تعيين كلمة المرور.</p>
         <div class="field">
           <label>رقم الجوال</label>
-          <input type="tel" id="forgotPhone" placeholder="05xxxxxxxx" autocomplete="tel" required />
+          <input type="tel" id="forgotPhone" placeholder="05xxxxxxxx" pattern="05[0-9]{8}" maxlength="10" inputmode="numeric" autocomplete="tel" required />
         </div>
 
         <div class="error-box" id="forgotError" style="display:none;"></div>
